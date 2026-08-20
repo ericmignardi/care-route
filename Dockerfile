@@ -5,13 +5,13 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 
 # Copy the pom.xml to cache dependencies
-COPY pom.xml .
+COPY backend/pom.xml .
 
 # Download dependencies offline (helps speed up subsequent builds)
 RUN mvn dependency:go-offline -B
 
 # Copy source code and build package (skipping tests for build speed/isolation)
-COPY src ./src
+COPY backend/src ./src
 RUN mvn clean package -DskipTests
 
 # ==========================================
