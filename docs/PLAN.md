@@ -74,29 +74,37 @@ Additionally verified beyond the stated criteria, since the cookie and CORS work
 
 ### Tasks
 
-- [ ] Set `spring.jpa.hibernate.ddl-auto=validate` and configure Flyway
-- [ ] `V1__baseline.sql` — existing `users`, `roles`, `user_roles`
-- [ ] `V2__care_domain.sql` — `clients`, `caregivers`, `availability`, `visits`, `care_plan_tasks`, `visit_tasks`, plus foreign keys
-- [ ] `V3__seed_roles.sql` — insert `ROLE_ADMIN`, `ROLE_COORDINATOR`, `ROLE_CAREGIVER`
-- [ ] Add a composite index on `visits(caregiver_id, scheduled_start)` — this is what makes the BR-1 overlap check a single fast query
-- [ ] Create entities following the conventions already in `User.java`: UUID ids, Lombok accessors, `@PrePersist`/`@PreUpdate` timestamps
-- [ ] Add `@Version` to `Visit` for optimistic locking (BR-8)
-- [ ] Implement `canTransitionTo(VisitStatus)` on the `Visit` entity — the state machine lives on the entity, not in a service
-- [ ] Create repositories; add the overlap query to `VisitRepository`
-- [ ] Write a `dev`-profiled `CommandLineRunner` seeding ~8 clients with real Ancaster/Dundas/Hamilton addresses, ~5 caregivers with varied skills and availability, and ~40 visits across the current week in mixed states
+- [x] ~~Set `spring.jpa.hibernate.ddl-auto=validate` and configure Flyway~~ — done, but **Flyway did not run at all on the first attempt.** Spring Boot 4 split auto-configuration out of `spring-boot-autoconfigure` into per-technology modules, so the bare `flyway-core` dependency added in Phase 0 brought the library without its auto-configuration. The app started, Hibernate validated against an empty schema, and failed with `missing table [availability]` — a misleading error for a missing starter. Fixed by replacing `flyway-core` with `spring-boot-starter-flyway`; `flyway-database-postgresql` is still needed alongside it.
+- [x] ~~`V1__baseline.sql` — existing `users`, `roles`, `user_roles`~~ — done
+- [x] ~~`V2__care_domain.sql` — `clients`, `caregivers`, `availability`, `visits`, `care_plan_tasks`, `visit_tasks`, plus foreign keys~~ — done, plus a seventh table `caregiver_skills` for the `Set<Skill>` `@ElementCollection`. A join table is the right model here: BR-3 needs to filter caregivers by skill in SQL, which a serialized column could not do.
+- [x] ~~`V3__seed_roles.sql` — insert `ROLE_ADMIN`, `ROLE_COORDINATOR`, `ROLE_CAREGIVER`~~ — done, `ON CONFLICT (name) DO NOTHING` so the migration is re-runnable
+- [x] ~~Add a composite index on `visits(caregiver_id, scheduled_start)`~~ — done as `idx_visits_caregiver_start`, alongside `idx_visits_client_start` and `idx_visits_start`
+- [x] ~~Create entities following the conventions already in `User.java`~~ — done. `@Builder` was added to the new entities (already used elsewhere in the codebase on `CustomUserDetails`), which is what keeps the seeder readable. `Instant` maps cleanly to `TIMESTAMP(6) WITH TIME ZONE` and passes schema validation.
+- [x] ~~Add `@Version` to `Visit` for optimistic locking (BR-8)~~ — done
+- [x] ~~Implement `canTransitionTo(VisitStatus)` on the `Visit` entity~~ — done, following the PRD section 5.3 state diagram exactly: cancellation is legal only from `SCHEDULED`. BR-6 names only `COMPLETED` as uncancellable, which could be read as permitting `IN_PROGRESS → CANCELLED`; the diagram is the narrower and more explicit statement, so it wins. A visit already under way is ended by checking out, not by cancelling.
+- [x] ~~Create repositories; add the overlap query to `VisitRepository`~~ — done. `findOverlapping` evaluates the half-open interval as `scheduledStart < :end AND scheduledEnd > :start`, excludes `CANCELLED`, and takes a nullable `excludedVisitId` so reassigning a visit does not conflict with itself. `findOverlappingForCaregivers` is the batched form the Phase 2 eligibility endpoint needs to avoid N+1.
+- [x] ~~Write a `dev`-profiled `CommandLineRunner` seeding ~8 clients, ~5 caregivers, and ~40 visits~~ — done: 8 clients, 5 caregivers, 41 visits, 118 visit tasks, 22 availability windows, 7 user accounts. Every seeded visit satisfies BR-1, BR-2 and BR-3, verified by SQL after seeding — the demo data must not itself violate the rules the product enforces.
 
 ### Deliverables
 
-- Six new tables under version control
-- Seven entities with relationships mapped
+- Seven new tables under version control
+- Six new entities with relationships mapped
 - A one-command reproducible demo dataset
 
 ### Exit criteria
 
-- `docker compose down -v && docker compose up -d` followed by app start completes with no Hibernate validation errors
-- `flyway_schema_history` shows three successful migrations
-- `SELECT count(*) FROM visits;` returns roughly 40
-- Restarting the app twice does not duplicate seed data
+- [x] `docker compose down -v && docker compose up -d` followed by app start completes with no Hibernate validation errors
+- [x] `flyway_schema_history` shows three successful migrations
+- [x] `SELECT count(*) FROM visits;` returns roughly 40 — returns 41
+- [x] Restarting the app twice does not duplicate seed data — counts identical across both restarts; the runner guards on `clientRepository.count() > 0`
+
+Additionally verified:
+
+- [x] All five `VisitStatus` values are present in the seed (25 COMPLETED, 8 SCHEDULED, 4 MISSED, 3 CANCELLED, 1 IN_PROGRESS), spread across the current week, with 5 unassigned upcoming visits so the Phase 6 dashboard and the Phase 5 assign flow both have something to act on
+- [x] Zero overlapping visit pairs per caregiver, zero visits outside the assigned caregiver's availability, zero visits requiring a skill the assigned caregiver lacks
+- [x] `./mvnw test` green
+
+> **On the test profile.** Tests initially failed with `Failed to determine a suitable driver class`. A `src/test/resources/application.properties` does not merge with the main one — it *shadows* it wholesale, taking the datasource configuration with it. The fix is `application-test.properties` plus `@ActiveProfiles("test")`, which also keeps `DevDataSeeder` from running during tests. Note that a stale `target/test-classes` copy survives a plain `mvnw test`, so `clean` is required after moving the file.
 
 > **Do not defer seeding to the end.** Every screen in Phases 5 and 6 is built against this data, and the difference between a demo recording with a populated schedule board and one with three test rows is the difference between a project that looks finished and one that looks abandoned.
 
