@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class JwtProperties {
 
     private String secretKey = "mySecretKeyMustBeAtLeast32BytesLongToSatisfyHmacSha256Requirements";
-    private long expirationTime = 86400000; // 1 day in milliseconds
-    private boolean cookieSecure = false;   // Set to true in production for HTTPS-only transmission
+    private long expirationTime = 86400000;
+    private boolean cookieSecure = false;
+    private String cookieSameSite = "Lax";
 }

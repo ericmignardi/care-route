@@ -32,16 +32,18 @@ Estimates total **46 hours** against a 40-hour week. That overage is intentional
 
 ### Tasks
 
-- [ ] Add dependencies to `backend/pom.xml`: `spring-boot-starter-actuator`, `spring-boot-devtools`, `flyway-core`, `flyway-database-postgresql`, `springdoc-openapi-starter-webmvc-ui`, and Testcontainers (`postgresql`, `junit-jupiter`, test scope)
-- [ ] Run `./mvnw dependency:resolve` and confirm the build compiles
-- [ ] **Boot the app and confirm springdoc actually starts.** Artifact resolution already succeeded, but the springdoc 2.x line targets Spring Boot 3.x — this is the single most likely dependency to fail at runtime. If it throws, remove it, note it in the README, and move on. Do not spend more than 30 minutes here.
+- [x] ~~Add dependencies to `backend/pom.xml`~~ — done. Two coordinate corrections were needed against Spring Boot 4.1: Testcontainers 2.0 renamed its modules, so the artifacts are `testcontainers-postgresql` and `testcontainers-junit-jupiter`, not `postgresql`/`junit-jupiter`. Boot 4 does not manage springdoc, so its version is pinned in a property.
+- [x] ~~Run `./mvnw dependency:resolve` and confirm the build compiles~~ — done
+- [x] ~~**Boot the app and confirm springdoc actually starts.**~~ — done, and the anticipated failure did not occur. The springdoc 2.x line does target Boot 3.x, but **springdoc 3.1.0 is built against Spring Boot 4.1.0 exactly** and starts cleanly. Swagger UI and `/v3/api-docs` both return 200. Descope item #4 is therefore still available but not forced.
 - [x] ~~Rename the base package `com.example.demo` to `com.careroute.backend`~~ — done
 - [x] ~~Update `groupId`, `artifactId`, `name`, and `description` in `pom.xml`~~ — done
 - [x] ~~Update the JAR glob in `backend/Dockerfile`~~ — done, now `careroute-*.jar`
 - [x] ~~Fix the prod compose build context~~ — done, resolved by moving the `Dockerfile` into `backend/` so it matches the declared `context: backend`
-- [ ] Delete `DataService.java` and the four demo endpoints in `AuthController` (`/admin`, `/user`, `/admin/task`, `/user/data`)
-- [ ] Externalize CORS origins: replace the hardcoded `http://localhost:5173` in `CorsConfig` with a `app.cors.allowed-origins` property
-- [ ] Externalize the cookie `SameSite` attribute in `AuthController` alongside the existing `cookie-secure` property
+- [x] ~~Delete `DataService.java` and the four demo endpoints in `AuthController`~~ — done
+- [x] ~~Externalize CORS origins~~ — done via `app.cors.allowed-origins`, bound as a `List<String>` so the property accepts a comma-separated list
+- [x] ~~Externalize the cookie `SameSite` attribute~~ — done via `security.jwt.cookie-same-site` on `JwtProperties`
+- [x] ~~Permit `/actuator/health` and the springdoc paths in `SecurityConfig`~~ — done; `anyRequest().authenticated()` would otherwise have returned 401 on the health check
+- [x] ~~Make the backend read the repository-root `.env`~~ — done via `spring.config.import`. This is what allows `application.properties` to carry no hardcoded origin at all while local development still works from a single `.env`. Real environment variables outrank the imported file, so deployed overrides behave as expected.
 
 ### Deliverables
 
@@ -50,10 +52,15 @@ Estimates total **46 hours** against a 40-hour week. That overage is intentional
 
 ### Exit criteria
 
-- `./mvnw clean compile` succeeds
-- `grep -r "com.example.demo" backend/src` returns nothing
-- `grep -rn "localhost:5173" backend/src` returns nothing
-- `curl localhost:8080/actuator/health` returns `{"status":"UP"}`
+- [x] `./mvnw clean compile` succeeds
+- [x] `grep -r "com.example.demo" backend/src` returns nothing
+- [x] `grep -rn "localhost:5173" backend/src` returns nothing
+- [x] `curl localhost:8080/actuator/health` returns status `UP` — the body is `{"groups":["liveness","readiness"],"status":"UP"}`. The `groups` key is additive: Boot 4 auto-configures the liveness and readiness probe groups, which Phase 7 wants for the Container Apps health probe, so they were kept rather than suppressed to match the literal string.
+
+Additionally verified beyond the stated criteria, since the cookie and CORS work is the whole reason this phase exists:
+
+- [x] Booted a second time with `JWT_COOKIE_SAME_SITE=None`, `JWT_COOKIE_SECURE=true`, and two Azure-style origins. The login response carried `Secure; HttpOnly; SameSite=None`, both configured origins passed preflight, and `http://localhost:5173` was then correctly rejected with 403 — confirming the property genuinely drives behaviour rather than merely existing.
+- [x] `./mvnw test` green
 
 > **Why the cookie work belongs here, not on deployment day.** The JWT cookie is currently `SameSite=Lax`. Once the frontend sits on `*.azurestaticapps.net` and the backend on `*.azurecontainerapps.io`, those are cross-site requests and the browser will silently refuse to send the cookie. You will see a login that appears to succeed followed by 401s on every subsequent call, with nothing useful in the logs. Production needs `SameSite=None; Secure`. Wiring it as configuration now costs fifteen minutes; discovering it on Friday costs an afternoon.
 

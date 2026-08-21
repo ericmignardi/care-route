@@ -2,7 +2,6 @@ package com.careroute.backend.controller;
 
 import com.careroute.backend.config.JwtProperties;
 import com.careroute.backend.service.AuthService;
-import com.careroute.backend.service.DataService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -12,8 +11,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 
@@ -23,7 +24,6 @@ import java.util.Set;
 public class AuthController {
 
     private final AuthService authService;
-    private final DataService dataService;
     private final JwtProperties jwtProperties;
 
     @PostMapping("/register")
@@ -41,7 +41,7 @@ public class AuthController {
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
                 .maxAge(jwtProperties.getExpirationTime() / 1000)
-                .sameSite("Lax")
+                .sameSite(jwtProperties.getCookieSameSite())
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -55,36 +55,10 @@ public class AuthController {
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(jwtProperties.getCookieSameSite())
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok("Logged out successfully!");
-    }
-
-    // Controller-layer secured endpoint: checks role before entering controller method
-    @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> adminEndpoint() {
-        return ResponseEntity.ok("Hello Admin! This is a secured admin endpoint.");
-    }
-
-    // Controller-layer secured endpoint: checks role before entering controller method
-    @GetMapping("/user")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<String> userEndpoint() {
-        return ResponseEntity.ok("Hello User! This is a secured user endpoint.");
-    }
-
-    // Service-layer secured endpoint: role check is evaluated when calling the Service method
-    @GetMapping("/admin/task")
-    public ResponseEntity<String> performAdminTask() {
-        return ResponseEntity.ok(dataService.performSensitiveAdminTask());
-    }
-
-    // Service-layer secured endpoint: role check is evaluated when calling the Service method
-    @GetMapping("/user/data")
-    public ResponseEntity<String> getGeneralData() {
-        return ResponseEntity.ok(dataService.getGeneralUserData());
     }
 
     @Data

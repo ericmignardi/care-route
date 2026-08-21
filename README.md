@@ -165,7 +165,7 @@ docker compose -f docker-compose.prod.yml up --build
 
 ## Configuration
 
-All configuration is environment-driven; no secrets are committed.
+All configuration is environment-driven; no secrets are committed. The backend reads the repository-root `.env` at startup, so `cp .env.example .env` is a required setup step — nothing is hardcoded as a fallback. Real environment variables take precedence over the file, which is how the deployed environments override it.
 
 | Variable | Purpose | Local default |
 |---|---|---|
@@ -202,7 +202,9 @@ Base path `/api/v1`. Errors follow RFC 7807 (`application/problem+json`).
 | `GET` | `/visits/my` | caregiver |
 | `GET` | `/dashboard/summary` | coordinator |
 
-Full detail in [docs/PRD.md](docs/PRD.md#8-api-surface).
+Full detail in [docs/PRD.md](docs/PRD.md#8-api-surface). With the backend running, the generated OpenAPI document is served at `/v3/api-docs` and Swagger UI at `/swagger-ui.html`.
+
+Liveness is exposed at `/actuator/health`.
 
 ## Testing
 
