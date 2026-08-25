@@ -70,7 +70,7 @@ export function ClientDetailPage() {
           Clients
         </Link>
         <span className="px-1.5 text-ink-4">/</span>
-        <span className="text-ink-4">{record.city}</span>
+        <span className="text-ink-3">{record.city}</span>
         <span className="px-1.5 text-ink-4">/</span>
         <span className="font-semibold text-ink">
           {record.firstName} {record.lastName}
@@ -320,7 +320,7 @@ function CarePlanPanel({
           >
             <span
               aria-hidden="true"
-              className="mt-px w-[18px] shrink-0 font-mono text-[11px] text-ink-4"
+              className="mt-px w-[18px] shrink-0 font-mono text-[11px] text-ink-3"
             >
               {String(index + 1).padStart(2, "0")}
             </span>

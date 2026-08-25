@@ -1,9 +1,17 @@
-name: careroute
+# A project name of its own. Sharing "careroute" with docker-compose.yml made the two
+# stacks fight over the container name "database" and report each other's services as
+# orphans, so the prod stack could not be started while the dev database was up — which
+# is exactly when you want to rehearse it.
+name: careroute-prod
+
+# The whole product from a clean checkout: `docker compose -f docker-compose.prod.yml up --build`.
+# Both surfaces are served from images here, so this is also the closest local rehearsal of
+# the Azure topology — a browser talking to two different origins, which is what makes the
+# externalised cookie and CORS policy load-bearing rather than decorative.
 
 services:
   db:
     image: postgres:16-alpine
-    container_name: database
     environment:
       POSTGRES_DB: ${DATABASE_DB}
       POSTGRES_USER: ${DATABASE_USER}
@@ -21,10 +29,13 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
-    container_name: backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
+      # Explicit, because the application default is dev and dev runs DevDataSeeder.
+      # Keeping dev here is deliberate: this stack is the demo, and a demo of a scheduling
+      # product against an empty schedule shows nothing. A real deployment sets prod.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DATABASE_DB}
       SPRING_DATASOURCE_USERNAME: ${DATABASE_USER}
       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD}
@@ -36,6 +47,28 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the bundle at build time, not read at runtime — Vite inlines it.
+        # It must be the origin the *browser* can reach, which is the published backend
+        # port on the host, never the compose service name.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api/v1}
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_started
     restart: always
 
 volumes:

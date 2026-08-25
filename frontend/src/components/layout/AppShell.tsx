@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet } from "react-router";
+import { RouteTransition } from "./RouteTransition";
 import { MobileNav } from "./MobileNav";
 import { TopBar } from "./TopBar";
 
@@ -15,11 +15,11 @@ export function AppShell() {
         Skip to content
       </a>
 
-      <TopBar onOpenNav={() => setNavOpen(true)} />
+      <TopBar onOpenNav={() => setNavOpen(true)} navOpen={navOpen} />
       <MobileNav open={navOpen} onClose={() => setNavOpen(false)} />
 
       <main id="main" className="flex-1">
-        <Outlet />
+        <RouteTransition />
       </main>
     </div>
   );

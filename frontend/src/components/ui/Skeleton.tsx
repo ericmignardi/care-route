@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { cn } from "../../lib/cn";
 
 /**
@@ -7,14 +8,18 @@ import { cn } from "../../lib/cn";
 export function Skeleton({
   className,
   lead = false,
+  style,
 }: {
   className?: string;
   lead?: boolean;
+  /** For placeholders whose size is computed — the week chart bars are a percentage each. */
+  style?: CSSProperties;
 }) {
   return (
     <span
       aria-hidden="true"
       className={cn("block rounded-[3px]", lead ? "shimmer" : "bg-sunken", className)}
+      style={style}
     />
   );
 }

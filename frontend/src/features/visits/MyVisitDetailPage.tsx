@@ -353,7 +353,7 @@ function Steps({ visit }: { visit: VisitDetail }) {
             <span
               className={cn(
                 "shrink-0 text-[14px] leading-[1.2] font-semibold",
-                step.done ? "text-ink" : "text-ink-4",
+                step.done ? "text-ink" : "text-ink-3",
               )}
             >
               {step.value}
@@ -459,7 +459,7 @@ function NoteEditor({
                   ? "Not saved — check your signal, it will retry as you type"
                   : "Saved as you type · visible to your coordinator"}
         </span>
-        <span className="shrink-0 text-[11.5px] leading-[1.4] text-ink-4">
+        <span className="shrink-0 text-[11.5px] leading-[1.4] text-ink-3">
           {text.length} / {NOTE_LIMIT}
         </span>
       </div>

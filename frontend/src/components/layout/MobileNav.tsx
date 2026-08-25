@@ -1,24 +1,25 @@
-import { useEffect } from "react";
+import { useRef } from "react";
 import { NavLink } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { navFor } from "../../lib/navigation";
 import { cn } from "../../lib/cn";
 
-/** The `lg:hidden` half of the navigation. Same links, same role gating, drawer chrome. */
+/**
+ * The `lg:hidden` half of the navigation. Same links, same role gating, drawer chrome.
+ *
+ * It is a modal layer, so it owes a keyboard what the dialog owes one — the same
+ * `useFocusTrap` the modal uses, rather than the lone Esc handler it had before. Without
+ * the trap, tabbing out of the drawer walks into a page the drawer is covering.
+ */
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const user = useAuthStore((state) => state.user);
   const items = navFor(user);
+  const drawerRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  useFocusTrap(open, drawerRef, onClose);
 
   return (
     <AnimatePresence>
@@ -34,7 +35,11 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
             className="absolute inset-0 bg-ink/26"
           />
           <motion.nav
-            aria-label="Main"
+            ref={drawerRef}
+            id="mobile-nav"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Main navigation"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}

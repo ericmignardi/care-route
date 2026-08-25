@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { cn } from "../../lib/cn";
-
-const FOCUSABLE =
-  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 interface ModalProps {
   open: boolean;
@@ -28,9 +26,10 @@ const SIZES = {
 } as const;
 
 /**
- * Esc dismisses, Tab cycles inside, and focus returns to whatever opened it. Trapping
- * focus is the part that is genuinely hard to add later, so it is here from the start
- * rather than waiting for the Phase 6 accessibility sweep.
+ * Esc dismisses, Tab cycles inside, and focus returns to whatever opened it — all of it
+ * from `useFocusTrap`, which the navigation drawer shares. Trapping focus is the part
+ * that is genuinely hard to add later, so it was here from the start rather than waiting
+ * for the accessibility sweep.
  */
 export function Modal({
   open,
@@ -44,51 +43,8 @@ export function Modal({
   bodyClassName,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const restoreTo = useRef<HTMLElement | null>(null);
 
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !panelRef.current) return;
-
-      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    if (!open) return;
-
-    restoreTo.current = document.activeElement as HTMLElement | null;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKeyDown);
-
-    panelRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = overflow;
-      restoreTo.current?.focus();
-    };
-  }, [open, onKeyDown]);
+  useFocusTrap(open, panelRef, onClose);
 
   if (!open) return null;
 

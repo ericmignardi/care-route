@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
 import { AppShell } from "./components/layout/AppShell";
 import { ProtectedRoute } from "./components/routing/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/routing/PublicOnlyRoute";
@@ -24,7 +24,12 @@ import { COORDINATOR_ROLES } from "./lib/constants";
  * not, because "the caregiver this visit is assigned to" is a relationship the server
  * checks per row (BR-7), not a role the router can decide from.
  */
-export const router = createBrowserRouter([
+/**
+ * The route tree, exported separately from the browser router so the tests can mount the
+ * same tree under a memory router. A guard tested against a hand-built route table is a
+ * guard tested against a table that can drift from the one that ships.
+ */
+export const routes: RouteObject[] = [
   {
     element: <PublicOnlyRoute />,
     children: [
@@ -59,4 +64,6 @@ export const router = createBrowserRouter([
     ],
   },
   { path: "*", element: <Navigate to="/" replace /> },
-]);
+];
+
+export const router = createBrowserRouter(routes);

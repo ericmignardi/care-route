@@ -1,3 +1,4 @@
+export { CountUp } from "./CountUp";
 export { Button } from "./Button";
 export type { ButtonSize, ButtonVariant } from "./Button";
 export { Badge, StatusBadge } from "./Badge";

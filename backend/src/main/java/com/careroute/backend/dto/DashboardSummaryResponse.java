@@ -20,6 +20,16 @@ public record DashboardSummaryResponse(
         List<VisitResponse> unassignedUpcomingVisits
 ) {
 
-    public record DayCount(LocalDate date, long total, long completed) {
+    /**
+     * One bar of the week chart. {@code unassigned} is the share of {@code total} that
+     * nobody is coming to — the chart stacks it on top of the assigned remainder, so the
+     * two segments must sum to the total rather than being independent measures.
+     */
+    public record DayCount(LocalDate date, long total, long completed, long unassigned) {
+
+        /** The pine segment: what is left once the clay share is taken off the top. */
+        public long assigned() {
+            return total - unassigned;
+        }
     }
 }

@@ -24,7 +24,12 @@
 
   --ink: #231f19;
   --ink-2: #5c5346;
-  --ink-3: #867c6d;
+  /* Darkened from the canvas #867c6d, which measured 3.93:1 on panel and 3.66:1 on
+     sunken — below AA for text under 18.66px, which is every place it is used. */
+  --ink-3: #6c6458;
+  /* Left at the canvas value deliberately. ink-4 is the disabled and placeholder step,
+     which WCAG exempts; raising it to AA would collapse it into ink-3 and flatten the
+     four-step ink ladder. Nothing informational is drawn in it — see the sweep note. */
   --ink-4: #a79c8a;
 
   --pine: #1e4335;
@@ -46,7 +51,7 @@
   --don-fg: #3b6449;
   --don-bd: #c1d2c3;
   --can-bg: #ebe7de;
-  --can-fg: #867c6d;
+  --can-fg: #6b6357;
   --can-bd: #d3ccbd;
   --mis-bg: #f6e1d7;
   --mis-fg: #933e24;
@@ -69,7 +74,7 @@
 
   --ink: #f2ece1;
   --ink-2: #bdb3a3;
-  --ink-3: #8d8574;
+  --ink-3: #958e7e;
   --ink-4: #6d6559;
 
   --pine: #2e6250;
@@ -89,7 +94,7 @@
   --don-fg: #83ac8f;
   --don-bd: #33473a;
   --can-bg: #211e19;
-  --can-fg: #7d7465;
+  --can-fg: #91897c;
   --can-bd: #332f27;
   --mis-bg: #331e16;
   --mis-fg: #e39676;

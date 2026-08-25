@@ -164,10 +164,16 @@ export interface CaregiverEligibility {
   reasons: EligibilityReason[];
 }
 
+/**
+ * One bar of the dashboard week chart. The two segments the chart stacks are the
+ * assigned remainder and the unassigned share, so they sum to the total above the bar
+ * rather than being independent measures of it.
+ */
 export interface DayCount {
   date: string;
   total: number;
   completed: number;
+  unassigned: number;
 }
 
 export interface DashboardSummary {

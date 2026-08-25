@@ -17,19 +17,25 @@ Coordinators schedule caregiver visits against real operational constraints. Car
 
 ---
 
-> **Replace before publishing:** the live demo link above, the screenshots in [Screenshots](#screenshots), and the demo credentials in [Demo accounts](#demo-accounts).
+> **Replace before publishing:** the live demo link above.
 
 ## Screenshots
 
-<!-- Replace these with real captures once Phase 6 is complete. -->
+Captured from the running application against the seeded dataset.
 
-| Schedule board | Assign flow |
-|---|---|
-| _screenshot_ | _screenshot_ |
+### Assigning a caregiver
 
-| Caregiver day view (mobile) | Coordinator dashboard |
+The signature interaction. Every caregiver the server evaluated is listed — the ineligible ones stay at full contrast with the reason beside them, because the reason is usually the thing a coordinator can change. Clicking a blocked caregiver attempts the assignment anyway, and the refusal that comes back is the server's, not the browser's.
+
+![Assigning a caregiver: a blocked caregiver is tried, refused with CAREGIVER_MISSING_SKILL, then an eligible one is assigned and the board updates](docs/screenshots/assign-flow.gif)
+
+| Coordinator dashboard | Schedule board |
 |---|---|
-| _screenshot_ | _screenshot_ |
+| ![Dashboard with four KPI tiles, a visits-per-day chart and the unassigned worklist](docs/screenshots/dashboard.jpg) | ![Day view of the schedule grouped by caregiver, with the time-aligned unassigned rail above it](docs/screenshots/schedule-board.jpg) |
+
+| Assign dialog | Caregiver day view |
+|---|---|
+| ![Assign dialog listing one eligible caregiver and four blocked ones, each with a category tag and a stated reason](docs/screenshots/assign-caregiver.jpg) | ![Caregiver day view with a large check-in target as the primary action](docs/screenshots/caregiver-day.png) |
 
 ---
 
@@ -159,9 +165,15 @@ Seeded by the `dev` profile.
 
 ### Full stack in Docker
 
+Both surfaces from images, with the frontend served by nginx:
+
 ```bash
 docker compose -f docker-compose.prod.yml up --build
 ```
+
+Frontend on `http://localhost:5173`, backend on `http://localhost:8080`. This is the closest local rehearsal of the deployed topology — a browser talking to two different origins — which is what makes the externalised cookie and CORS policy worth having.
+
+Two things to know about it. `VITE_API_URL` is a **build argument**, not a runtime variable: Vite inlines it into the bundle, so an image built for one environment cannot be re-pointed at another by setting an environment variable on the running container. And the stack runs under its own compose project name (`careroute-prod`), so it can be brought up alongside the development database rather than fighting it for a container name.
 
 ## Configuration
 
@@ -214,6 +226,8 @@ cd frontend && npm test       # Vitest + Testing Library + MSW
 ```
 
 Backend tests are weighted toward the business rules rather than coverage percentage: each rule has a passing case and a rejecting case, plus boundary coverage where it matters — a visit ending exactly when the next begins must *not* register as a conflict.
+
+Frontend tests are deliberately few and all about behaviour that would be expensive to get wrong: the assign flow renders every refusal the server sent and surfaces the one it sends back when a blocked caregiver is tried anyway; the route guards redirect without ever mounting the guarded screen; the login schema refuses the round trip; the modal traps focus and hands it back. MSW runs with `onUnhandledRequest: "error"`, which is what lets a test assert that a request did *not* happen — otherwise a guard that silently leaked would still pass.
 
 ## Deployment
 

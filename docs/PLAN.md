@@ -393,21 +393,63 @@ Additionally verified:
 ### Tasks
 
 - [x] ~~Dashboard KPI tiles from `/dashboard/summary`~~ — done in Phase 5; its exit criterion 6 ("observe the KPI change") is not verifiable against a placeholder
-- [ ] Visits-per-day chart for the current week (Recharts, or Tailwind bars — the chart is not worth an extra dependency if time is short)
+- [x] ~~Visits-per-day chart for the current week (Recharts, or Tailwind bars — the chart is not worth an extra dependency if time is short)~~ — done in CSS, no new dependency. It needed a backend change the plan did not anticipate: the design stacks each bar as assigned against unassigned, and `DayCount` carried only `total` and `completed`. `VisitTimeSlice` now projects the caregiver foreign key and `DayCount` carries `unassigned`, so the two segments sum to the number printed above the bar. A stacked chart whose parts do not add up to its own label is worse than no chart — it is quietly wrong rather than absent.
 - [x] ~~Unassigned upcoming visits list, each linking to its assign flow~~ — done in Phase 5, since it arrives in the same `/dashboard/summary` response as the tiles
-- [ ] Motion: page transitions, list enter/exit, KPI count-ups. Restraint here reads as more professional than abundance.
-- [ ] Accessibility sweep: keyboard traversal, visible focus rings, labelled inputs, AA contrast, modal focus trapping
-- [ ] Frontend tests with Vitest + React Testing Library + MSW — about 8, covering the assign flow, route guards, and one form validation path
-- [ ] README with screenshots and a demo GIF
-- [ ] Verify `docker compose -f docker-compose.prod.yml up --build` works; add an nginx-served frontend stage
+- [x] ~~Motion: page transitions, list enter/exit, KPI count-ups. Restraint here reads as more professional than abundance.~~ — done, four pieces and no more. See the note below on `useOutlet`, which is the one non-obvious part.
+- [x] ~~Accessibility sweep: keyboard traversal, visible focus rings, labelled inputs, AA contrast, modal focus trapping~~ — done, and it found two real defects rather than confirming everything was fine.
+- [x] ~~Frontend tests with Vitest + React Testing Library + MSW — about 8, covering the assign flow, route guards, and one form validation path~~ — done, 11 across 5 files
+- [x] ~~README with screenshots and a demo GIF~~ — done, captured from the prod compose stack against the seeded dataset
+- [x] ~~Verify `docker compose -f docker-compose.prod.yml up --build` works; add an nginx-served frontend stage~~ — done, and it did not work as it stood. See the defects below.
+
+Three items added during the phase that were not on the list:
+
+- [x] **`DashboardServiceIT`.** The exit criterion is "dashboard numbers match the database", which until now was something to eyeball against a seeded environment. Six tests assert it instead, including that the chart carries all seven days when five of them are empty — a chart that drops its empty days shifts every later bar into the wrong slot — and that a cancelled visit is neither a completion nor a failure.
+- [x] **`useFocusTrap`, extracted from `Modal`.** The mobile navigation drawer is a modal layer and had only an Esc handler: no trap, no focus-in, no restore. Tabbing out of it walked into the page it was covering. Both surfaces now share one implementation, which is the point — the second hand-written focus trap is always the one that forgets to restore focus.
+- [x] **A `careroute-prod` compose project name.** See below.
+
+### Defects found and fixed
+
+Two, both found by measuring rather than by reading.
+
+- [x] **The prod compose stack could not start while the development database was up.** Both compose files declared `container_name: database` under the same `name: careroute` project, so Docker refused the name and each stack reported the other's services as orphans. The prod stack is exactly the thing you want to rehearse *while* developing, which made this a failure at the only moment it mattered. Fixed by giving it its own project namespace and dropping the hardcoded container names.
+- [x] **The design canvas's own palette failed WCAG AA.** The component sheet is captioned "WCAG AA in both modes", so it was measured rather than believed — every token pair against its worst-case background, in both themes. `--ink-3` came back at **3.93:1** on panel and 3.66:1 on sunken, against the 4.5:1 that text under 18.66px requires, and `--can-fg` (the Cancelled badge) at **3.33:1**. Both carry real content: hints, captions, table headers, a status word. Raised to 4.8:1 in both themes.
 
 ### Exit criteria
 
-- Dashboard numbers match the database
-- Every interactive element is keyboard reachable with a visible focus state
-- `npm test` passes
-- The README renders correctly on GitHub with images loading
-- The full prod compose stack serves both surfaces from a clean checkout
+- [x] **Dashboard numbers match the database** — asserted by `DashboardServiceIT` rather than eyeballed, and confirmed live: the tiles read 7 / 5 / 0 / 100.0% against the seed, and assigning a visit during the demo recording took the unassigned tile from 5 to 4.
+- [x] **Every interactive element is keyboard reachable with a visible focus state** — audited in the running application: 18 focusable nodes on the dashboard, **zero** without an accessible name, **zero** unlabelled inputs, landmarks and heading outline intact, skip link present. The focus ring is one global `*:focus-visible` rule, so it cannot be missing from a control that forgot to opt in.
+- [x] **`npm test` passes** — 11 tests across 5 files
+- [x] **The README renders correctly on GitHub with images loading** — four captures and a GIF under `docs/screenshots/`, referenced by repository-relative path
+- [x] **The full prod compose stack serves both surfaces from a clean checkout** — see the table below
+
+Verified against `docker compose -f docker-compose.prod.yml up --build` on a fresh volume:
+
+| Check | Result |
+|---|---|
+| Backend health through published ingress | `{"groups":["liveness","readiness"],"status":"UP"}` |
+| Flyway on a fresh volume | V1, V2, V3 all `success` |
+| Frontend index | `200 text/html` |
+| SPA deep link `/clients/abc` | `200` — the nginx fallback, not a 404 |
+| `index.html` cache header | `no-cache`, so a deploy cannot pin a browser to a deleted bundle |
+| Cross-origin login, `:5173` to `:8080` | `200`, `Access-Control-Allow-Credentials: true`, `Set-Cookie: jwt=…; HttpOnly; SameSite=Lax` |
+| Full assign loop in the browser | Blocked caregiver refused `CAREGIVER_MISSING_SKILL`; eligible one assigned; board, unassigned rail count and caregiver hours all updated |
+
+Additionally verified:
+
+- [x] `./mvnw test` green — **116 executions**, up from 110, the six new ones covering the dashboard aggregate.
+- [x] `npm run build` produces no TypeScript errors, and `npm run lint` is clean.
+- [x] Contrast re-measured after the palette change: every ink step carrying information clears **4.8:1** on its worst-case background in both themes.
+- [x] Zero console errors across the dashboard, the board, the assign dialog and the caregiver screens.
+
+> **The page transition needed `useOutlet()`, not `<Outlet/>`.** An `<Outlet/>` placed inside `AnimatePresence` renders whatever the *current* route is — so during a `mode="wait"` exit the outgoing panel is already showing the incoming screen, and the transition reads as a flicker rather than a change. Capturing the element at render time gives the exiting panel something stable to hold while it leaves. Everything else is one `MotionConfig reducedMotion="user"` at the root, which makes honouring the OS setting a property of the application rather than something each animation has to remember.
+
+> **The KPI count-up is `aria-hidden`, with the exact figure rendered beside it.** Nobody should have to listen to a number climb. It also counts only on the *first* value it is given: a refetch that moves "visits today" from 7 to 8 snaps, because re-running the animation would make a one-visit change look like the whole day reloaded.
+
+> **On changing two of the design's own colours.** The canvas is the specification, and Phase 4 was right that screens do not get to invent new greens — but the canvas also *claims* AA, and two of its tokens do not meet it. Treating the measured numbers as authoritative over the swatch is the honest reading of that conflict: the fix serves the design's stated intent rather than departing from it. `--ink-4` was deliberately left at the canvas value, because raising it to AA would have collapsed it into `--ink-3` and flattened the four-step ink ladder. Instead the eleven places drawing *informational* text in it — chart axis, board hour labels, legend, timeline steps, durations — moved to `--ink-3`, leaving `--ink-4` doing only what WCAG exempts: disabled controls, placeholders, `aria-hidden` glyphs and decorative separators.
+
+> **The chart is CSS, and that was not a shortcut.** Recharts brings d3 into the bundle to draw seven bars, and the design specifies exact geometry — 52px bars, a 216px plot, three 72px gridline bands — which is easier to honour directly than to talk a chart library into. The part worth pointing at is the axis: the maximum is rounded up to a value whose thirds are round numbers, so the three gridlines land exactly on their labels instead of reading 41, 27, 14, 0. The drawing itself is `aria-hidden` and the same figures follow as a real `<table>`, which is both the accessible reading and the one a coordinator can copy out of.
+
+> **Eleven frontend tests, not eighty.** The same argument as Phase 3. What is worth testing here is the assign flow rendering refusals it did not compute, a route guard that redirects *without mounting* the guarded screen, and a focus trap that hands focus back. MSW runs with `onUnhandledRequest: "error"`, which is the mechanism that makes "this request did not happen" assertable at all — the guard test proves `ClientsPage` never mounted by registering no `/clients` handler and staying green.
 
 ---
 

@@ -11,7 +11,7 @@ import { UserMenu } from "./UserMenu";
  * working a 2160px-wide schedule grid should not surrender 240px of it to chrome.
  * Below `lg` the same links move into the drawer.
  */
-export function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
+export function TopBar({ onOpenNav, navOpen }: { onOpenNav: () => void; navOpen: boolean }) {
   const user = useAuthStore((state) => state.user);
   const items = navFor(user);
 
@@ -21,6 +21,8 @@ export function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
         type="button"
         onClick={onOpenNav}
         aria-label="Open navigation"
+        aria-expanded={navOpen}
+        aria-controls="mobile-nav"
         className="flex size-8 cursor-pointer items-center justify-center rounded-[5px] border border-line-2 text-ink-2 hover:bg-sunken hover:text-ink lg:hidden"
       >
         <Menu aria-hidden="true" className="size-4" />

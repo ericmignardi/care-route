@@ -64,7 +64,11 @@ public class DashboardService {
         return concluded == 0 ? 0d : (double) completed / concluded;
     }
 
-    /** FR-6.2. Every day of the week is present, including the empty ones, so the chart has a flat axis. */
+    /**
+     * FR-6.2. Every day of the week is present, including the empty ones, so the chart
+     * has a flat axis: a missing Sunday would otherwise shift Saturday into its slot and
+     * quietly redraw the week.
+     */
     private List<DashboardSummaryResponse.DayCount> dayCounts(LocalDate weekStart, List<VisitTimeSlice> week) {
         Map<LocalDate, List<VisitTimeSlice>> byDay = week.stream()
                 .collect(Collectors.groupingBy(slice -> slice.scheduledStart().toLocalDate()));
@@ -76,7 +80,8 @@ public class DashboardService {
             counts.add(new DashboardSummaryResponse.DayCount(
                     day,
                     slices.size(),
-                    slices.stream().filter(s -> s.status() == VisitStatus.COMPLETED).count()));
+                    slices.stream().filter(s -> s.status() == VisitStatus.COMPLETED).count(),
+                    slices.stream().filter(VisitTimeSlice::unassigned).count()));
         }
         return counts;
     }

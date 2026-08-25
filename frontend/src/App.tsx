@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
+import { MotionConfig } from "motion/react";
 import { ThemeProvider } from "./context/ThemeProvider";
 import { Toaster } from "./components/ui/Toast";
 import { useAuthStore } from "./stores/authStore";
@@ -16,8 +17,15 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
-      <Toaster />
+      {/*
+        One place decides how much the product moves. reducedMotion="user" makes every
+        motion component in the tree honour the OS setting, so the accessibility promise
+        is a property of the app rather than something each animation has to remember.
+      */}
+      <MotionConfig reducedMotion="user">
+        <RouterProvider router={router} />
+        <Toaster />
+      </MotionConfig>
     </ThemeProvider>
   );
 }

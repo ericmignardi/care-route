@@ -32,6 +32,16 @@ export function formatDayLong(value: string | Date): string {
   return format(toDate(value), DAY_LONG);
 }
 
+/** "Mon 24" — the week chart's axis, where the month is already in the caption. */
+export function formatDayTick(value: string | Date): string {
+  return format(toDate(value), "EEE d");
+}
+
+/** "Mon 24 Aug" — the week chart's caption, which does need the month. */
+export function formatDayMedium(value: string | Date): string {
+  return format(toDate(value), "EEE d MMM");
+}
+
 /** "09:00–10:30", collapsing the date when both ends fall on the same day. */
 export function formatWindow(start: string | Date, end: string | Date): string {
   const from = toDate(start);

@@ -329,7 +329,7 @@ function Timeline({ visit }: { visit: VisitDetail }) {
             <span
               className={cn(
                 "shrink-0 text-[14px] leading-[1.2] font-semibold",
-                step.done ? "text-ink" : "text-ink-4",
+                step.done ? "text-ink" : "text-ink-3",
               )}
             >
               {step.value}

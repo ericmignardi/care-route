@@ -232,7 +232,7 @@ export function MyVisitsPage() {
                         : ` · ${VISIT_STATUS_META[visit.status].label}`}
                     </span>
                   </span>
-                  <span className="shrink-0 text-[12px] leading-none font-medium text-ink-4">
+                  <span className="shrink-0 text-[12px] leading-none font-medium text-ink-3">
                     View
                   </span>
                 </button>
@@ -359,7 +359,7 @@ function SectionRule({ label, accent }: { label: string; accent?: boolean }) {
   return (
     <div className="flex items-center gap-2.5 pt-3.5 pb-2.5">
       <span
-        className={cn("label-caps text-[9.5px]", accent ? "text-pine-acc" : "text-ink-4")}
+        className={cn("label-caps text-[9.5px]", accent ? "text-pine-acc" : "text-ink-3")}
       >
         {label}
       </span>

@@ -153,7 +153,7 @@ export function ScheduleBoard({
               style={{ width: LABEL_WIDTH }}
             >
               <span className="label-caps text-[9.5px] text-ink-3">Caregiver</span>
-              <span className="font-mono text-[9.5px] font-semibold text-ink-4">
+              <span className="font-mono text-[9.5px] font-semibold text-ink-3">
                 {caregivers.length}
               </span>
             </div>
@@ -203,7 +203,7 @@ export function ScheduleBoard({
                     <span className="shrink-0 rounded-[3px] border border-line bg-sunken px-1 py-[3px] font-mono text-[9px] leading-none font-semibold tracking-[.04em] text-ink-3">
                       {caregiver.skills[0] ? SKILL_LABELS[caregiver.skills[0]].slice(0, 4).toUpperCase() : "—"}
                     </span>
-                    <span className="w-[30px] shrink-0 text-right text-[10px] leading-none text-ink-4">
+                    <span className="w-[30px] shrink-0 text-right text-[10px] leading-none text-ink-3">
                       {bookedMinutes > 0 ? `${(bookedMinutes / 60).toFixed(1)}h` : "—"}
                     </span>
                   </div>
@@ -311,7 +311,7 @@ function Legend({ visits }: { visits: Visit[] }) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line-2 bg-panel px-[18px] py-2">
-      <span className="label-caps text-[9.5px] text-ink-4">Legend</span>
+      <span className="label-caps text-[9.5px] text-ink-3">Legend</span>
       {(Object.keys(counts) as Array<keyof typeof counts>).map((status) => {
         const meta = VISIT_STATUS_META[status];
         return (

@@ -17,6 +17,7 @@ export function UserMenu() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -24,8 +25,12 @@ export function UserMenu() {
     function onPointerDown(event: MouseEvent) {
       if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
     }
+    // Esc hands focus back to the trigger. Closing a menu and leaving focus on a node
+    // that has just been removed drops a keyboard user at the top of the document.
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
     }
 
     document.addEventListener("mousedown", onPointerDown);
@@ -48,6 +53,7 @@ export function UserMenu() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"

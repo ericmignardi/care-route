@@ -78,9 +78,9 @@ public interface VisitRepository extends JpaRepository<Visit, UUID>, JpaSpecific
     List<Visit> findByCaregiverIsNullAndStatusAndScheduledStartGreaterThanEqualOrderByScheduledStartAsc(
             VisitStatus status, LocalDateTime from, Pageable pageable);
 
-    /** FR-6.2 — two columns rather than whole rows, since the chart only counts. */
+    /** FR-6.2 — three columns rather than whole rows, since the chart only counts. */
     @Query("""
-            SELECT new com.careroute.backend.dto.VisitTimeSlice(v.scheduledStart, v.status)
+            SELECT new com.careroute.backend.dto.VisitTimeSlice(v.scheduledStart, v.status, v.caregiver.id)
             FROM Visit v
             WHERE v.scheduledStart >= :start AND v.scheduledStart < :end
             """)
