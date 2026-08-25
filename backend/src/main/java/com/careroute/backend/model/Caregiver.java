@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class Caregiver {
     private CaregiverStatus status;
 
     @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "caregiver_skills", joinColumns = @JoinColumn(name = "caregiver_id"))
     @Column(name = "skill", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -45,6 +47,7 @@ public class Caregiver {
     private Set<Skill> skills = EnumSet.noneOf(Skill.class);
 
     @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     @Builder.Default
     private List<Availability> availability = new ArrayList<>();
 

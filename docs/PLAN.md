@@ -2,7 +2,7 @@
 
 **Companion to:** [PRD.md](./PRD.md)
 **Target:** 5 working days (~40 focused hours)
-**Last updated:** 2026-08-21
+**Last updated:** 2026-08-25
 
 ---
 
@@ -118,18 +118,23 @@ Additionally verified:
 
 ### Tasks
 
-- [ ] DTOs as Java `record` types with static `from(Entity)` factories (skip MapStruct — a second annotation processor alongside Lombok requires explicit `annotationProcessorPaths` ordering in the existing compiler config, for no benefit at this scale)
-- [ ] Typed exceptions: `ResourceNotFoundException`, `BusinessRuleViolationException`, `SchedulingConflictException`
-- [ ] Migrate `GlobalExceptionHandler` to RFC 7807 `ProblemDetail`, preserving the existing field-error map behaviour from `handleValidationExceptions`; add a handler for `OptimisticLockingFailureException` returning 409
-- [ ] **`VisitEligibilityChecker`** — one component evaluating BR-1, BR-2, BR-3 and returning a structured result with a reason per failure
-- [ ] `VisitSchedulingService` — schedule, assign, cancel; delegates to the eligibility checker
-- [ ] `VisitExecutionService` — check-in (BR-4), check-out (BR-5), task completion
-- [ ] Ownership guard for BR-7: compare the authenticated principal against the visit's assigned caregiver
-- [ ] `ClientService`, `CaregiverService` with pagination
-- [ ] JPA `Specification` composing the optional visit filters (date range, caregiver, client, status)
-- [ ] Controllers for clients, care plan tasks, caregivers, availability, visits, dashboard
-- [ ] `GET /auth/me`
-- [ ] Cap page size at 100 (NFR-4)
+- [x] ~~DTOs as Java `record` types with static `from(Entity)` factories~~ — done, 27 records under `dto/`. MapStruct stayed skipped as planned. One addition the plan did not name: `PageResponse<T>`. Returning Spring Data's `Page` directly ties the wire format to a type whose JSON shape is explicitly not contractual, and Boot warns about exactly that; the envelope is now the contract.
+- [x] ~~Typed exceptions: `ResourceNotFoundException`, `BusinessRuleViolationException`, `SchedulingConflictException`~~ — done. The latter two carry a `rule` string that reaches the client as a `ProblemDetail` extension property, so a frontend can branch on `CAREGIVER_DOUBLE_BOOKED` versus `CAREGIVER_MISSING_SKILL` without parsing prose. Three exception types cover eight rules because the rule identity travels in the payload rather than in the class name.
+- [x] ~~Migrate `GlobalExceptionHandler` to RFC 7807 `ProblemDetail`, preserving the field-error map; add an `OptimisticLockingFailureException` handler returning 409~~ — done, field errors preserved as the `errors` extension property. **Four extra handlers were required that the plan did not anticipate.** The catch-all `@ExceptionHandler(Exception.class)` inherited from the old handler swallows Spring MVC's own exceptions, so an unparseable body, a missing parameter, a wrong method and an unmatched route all returned 500 instead of 400/400/405/404. Explicit handlers for `HttpMessageNotReadableException`, `MissingServletRequestParameterException`, `HttpRequestMethodNotSupportedException` and `NoResourceFoundException` restore the right statuses.
+- [x] ~~**`VisitEligibilityChecker`** — one component evaluating BR-1, BR-2, BR-3 and returning a structured result with a reason per failure~~ — done. Written batch-first: `evaluate(Collection<Caregiver>, ...)` is the real implementation and the single-caregiver `check(...)` delegates to it with a singleton list. That inversion is what guarantees the two consumers cannot drift, and it means the eligibility screen costs three queries whether it is evaluating five caregivers or fifty.
+- [x] ~~`VisitSchedulingService` — schedule, assign, cancel; delegates to the eligibility checker~~ — done. `POST /visits` copies the client's care plan into visit tasks (FR-4.6): the visit records what was actually asked for, so editing a care plan later cannot rewrite the history of a completed visit.
+- [x] ~~`VisitExecutionService` — check-in (BR-4), check-out (BR-5), task completion~~ — done, plus `POST /visits/{id}/notes` for FR-5.4, which the PRD requires but section 8 has no row for.
+- [x] ~~Ownership guard for BR-7~~ — done as `VisitAccessGuard`, with two entry points rather than one. `requireViewAccess` lets coordinators read any visit; `requireOwnership` does not, so a coordinator can *see* a visit but cannot check into it. The role table already says so — check in/out is "own only" for caregivers and "No" for both other roles — and collapsing the two into one method would have quietly granted it.
+- [x] ~~`ClientService`, `CaregiverService` with pagination~~ — done. `DELETE /clients/{id}` deactivates rather than deletes; a client row is referenced by every visit ever performed for them. `POST /caregivers` creates the login and the profile together (FR-1.4) — neither is useful alone.
+- [x] ~~JPA `Specification` composing the optional visit filters~~ — done, plus specifications for clients and caregivers. Each applies its fetch joins only when the query is not the count query, where a fetch join is illegal.
+- [x] ~~Controllers for clients, care plan tasks, caregivers, availability, visits, dashboard~~ — done, every row of PRD section 8 implemented.
+- [x] ~~`GET /auth/me`~~ — done. It returns `caregiverId`, non-null only for accounts with a profile, which is what Phase 4 needs to decide whether the field surface is reachable at all.
+- [x] ~~Cap page size at 100 (NFR-4)~~ — done via `spring.data.web.pageable.max-page-size`; `size=500` returns `"size":100`.
+
+Two items added during the phase that were not on the list:
+
+- [x] **`VisitWindow` value object.** BR-1's half-open interval was about to be re-expressed at each comparison site. Making the window a record with a compact constructor that rejects a non-positive duration puts "half-open" and "must end after it starts" in one place, and gives the checker a parameter type that cannot be malformed.
+- [x] **A `Clock` bean and `app.scheduling` properties.** BR-4 compares "now" against a `LocalDateTime` scheduled start, which is only meaningful in a stated timezone, and a hardcoded `Instant.now()` would leave the tolerance test scheduling visits relative to the wall clock and hoping. The tolerance and the zone are both configuration.
 
 ### Deliverables
 
@@ -139,20 +144,38 @@ Additionally verified:
 
 ### Exit criteria
 
-Verified by request, with a coordinator session:
+Verified by request against the seeded dataset, with a coordinator session:
 
-| Request | Expected |
-|---|---|
-| Schedule a valid visit | `201` |
-| Schedule an overlapping visit, same caregiver | `409` |
-| Assign a caregiver lacking the required skill | `422` |
-| Schedule outside the caregiver's availability | `422` |
-| Check out a SCHEDULED visit | `409` |
-| Cancel a COMPLETED visit | `409` |
-| `GET /visits/eligible-caregivers` | `200`, each ineligible entry carries a reason |
-| As caregiver A, `GET` caregiver B's visit | `403` |
+| Request | Expected | Actual |
+|---|---|---|
+| Schedule a valid visit | `201` | `201`, with the client's four care plan tasks copied onto the visit |
+| Schedule an overlapping visit, same caregiver | `409` | `409` `CAREGIVER_DOUBLE_BOOKED`, `"Booked 10:00-11:30"` |
+| Assign a caregiver lacking the required skill | `422` | `422` `CAREGIVER_MISSING_SKILL`, `"Missing: NURSING"` |
+| Schedule outside the caregiver's availability | `422` | `422` `CAREGIVER_UNAVAILABLE`, `"Only available Tuesdays 08:00-16:00"` |
+| Check out a SCHEDULED visit | `409` | `409` `ILLEGAL_STATUS_TRANSITION` |
+| Cancel a COMPLETED visit | `409` | `409` `ILLEGAL_STATUS_TRANSITION` |
+| `GET /visits/eligible-caregivers` | `200`, each ineligible entry carries a reason | `200`; two eligible, three ineligible, one of them carrying two reasons |
+| As caregiver A, `GET` caregiver B's visit | `403` | `403` |
 
-Additionally: `GET /visits?page=0&size=20` returns a page envelope, and the SQL log shows no N+1 pattern (NFR-6).
+- [x] `GET /visits?page=0&size=20` returns a page envelope
+- [x] The SQL log shows no N+1 pattern (NFR-6) — see below
+
+Additionally verified beyond the stated criteria:
+
+- [x] **Half-open boundary (BR-1).** A visit 11:30–12:30 abutting one that ends at 11:30 returns `201`, not `409`. This is the one BR-1 case an off-by-one would silently get wrong, so it was worth checking before Phase 3 rather than after.
+- [x] **The full field loop.** Check in within tolerance → `200` `IN_PROGRESS` with `checkedInAt`; complete a task → `200`; add a note → `200`; check out → `200` `COMPLETED` with `checkedOutAt`; check out again → `409`.
+- [x] **BR-4 rejection.** Checking into a visit weeks away returns `409 CHECK_IN_OUTSIDE_TOLERANCE`, `"Check-in opens within 30 minutes of 10:00"`.
+- [x] Unauthenticated `GET /visits` returns `401`; a caregiver hitting `GET /clients` returns `403`. Both come back as `problem+json`.
+- [x] Validation failures return `400` with the field-error map intact.
+- [x] `./mvnw test` green.
+
+> **The N+1 the plan predicted was there, and it was not where the fetch joins were.** All the obvious associations were already joined, but every list endpoint still fired one `user_roles` query per row: `User.roles` is `EAGER` — deliberately, because authentication reads roles outside any transaction — so each user materialised by a caregiver join fetch triggered its own roles load. Twenty visits meant five extra queries; a hundred would have meant more. `@BatchSize` on `User.roles` collapses them into one, keeping the eager semantics authentication depends on. `Caregiver.skills` and `Caregiver.availability` got the same treatment. Every list endpoint is now a fixed statement count independent of page size: `/visits` and `/caregivers` are five each, `/visits/eligible-caregivers` is three regardless of how many caregivers are evaluated, `/dashboard/summary` is five. This is worth knowing before Phase 6 adds screens on top of them — and it is worth stating in an interview that the fix was found by reading the SQL log rather than by assuming.
+
+> **On reason ordering.** When a caregiver fails several rules at once, something has to decide which one becomes the exception. `EligibilityRule` declaration order does it — inactive, then missing skill, then unavailable, then double-booked — and `EligibilityResult` sorts by it. The consequence is that a 422 wins over a 409 when both apply, which is deterministic and testable rather than dependent on evaluation order. The eligibility endpoint returns *all* the reasons; only the assignment path collapses to one.
+
+> **A privilege escalation was fixed that was not on the task list.** `POST /auth/register` is unauthenticated and was creating any role named in the request body, inventing it if it did not exist. Anyone could have registered as `ROLE_ADMIN` and walked past every role gate added in this phase, which would have made the whole authorization model decorative. Registration now grants `ROLE_CAREGIVER` only and rejects a request naming anything else with `422 ROLE_NOT_SELF_ASSIGNABLE`. Coordinator and admin accounts come from the seed; caregiver accounts come from `POST /caregivers` (FR-1.4).
+
+> **BR-8 is wired but not yet proven.** `OptimisticLockingFailureException` maps to 409 and `VisitDetailResponse` carries `version` so a client can round-trip it, but a concurrent-modification test needs two transactions and belongs to Phase 3, which already has it on the list. This is the one exit-criteria-adjacent item deliberately left for the next phase rather than hand-verified here.
 
 > **The eligibility checker is the centrepiece.** Write it once and call it from both the assignment path and the eligibility endpoint. If you find yourself writing the overlap logic a second time, stop and refactor — a reviewer who spots duplicated business rules will discount everything else. It is also the thing to talk about in an interview, so it is worth the extra thirty minutes to get clean.
 

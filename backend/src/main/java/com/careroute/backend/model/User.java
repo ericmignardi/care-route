@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.Instant;
 import java.util.Set;
@@ -29,7 +30,10 @@ public class User {
     private String firstName;
     @Column(nullable = false, name = "last_name")
     private String lastName;
+    // Eager because the roles are read during authentication, outside any transaction;
+    // batched because otherwise every user loaded by a list endpoint fires its own roles query.
     @ManyToMany(fetch = FetchType.EAGER)
+    @BatchSize(size = 100)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

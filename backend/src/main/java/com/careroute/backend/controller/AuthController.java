@@ -1,6 +1,10 @@
 package com.careroute.backend.controller;
 
 import com.careroute.backend.config.JwtProperties;
+import com.careroute.backend.dto.CurrentUserResponse;
+import com.careroute.backend.model.Caregiver;
+import com.careroute.backend.repository.CaregiverRepository;
+import com.careroute.backend.security.CustomUserDetails;
 import com.careroute.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -11,12 +15,15 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -25,6 +32,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtProperties jwtProperties;
+    private final CaregiverRepository caregiverRepository;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
@@ -59,6 +67,18 @@ public class AuthController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok("Logged out successfully!");
+    }
+
+    /**
+     * FR-1.3. The frontend hydrates its auth store from here on load, so a hard refresh
+     * restores the session from the cookie rather than from anything stored in the browser.
+     */
+    @GetMapping("/me")
+    public CurrentUserResponse me(@AuthenticationPrincipal CustomUserDetails principal) {
+        UUID caregiverId = caregiverRepository.findByUserId(principal.getUserId())
+                .map(Caregiver::getId)
+                .orElse(null);
+        return CurrentUserResponse.from(principal, caregiverId);
     }
 
     @Data
