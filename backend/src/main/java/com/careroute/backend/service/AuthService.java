@@ -1,8 +1,8 @@
 package com.careroute.backend.service;
 
-import com.careroute.backend.controller.AuthController.AuthResponse;
-import com.careroute.backend.controller.AuthController.LoginRequest;
-import com.careroute.backend.controller.AuthController.RegisterRequest;
+import com.careroute.backend.dto.AuthResponse;
+import com.careroute.backend.dto.LoginRequest;
+import com.careroute.backend.dto.RegisterRequest;
 import com.careroute.backend.exception.BusinessRuleViolationException;
 import com.careroute.backend.model.Role;
 import com.careroute.backend.model.User;
@@ -44,11 +44,11 @@ public class AuthService {
      * role check in the application.
      */
     public void register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("Username is already taken!");
         }
-        if (request.getRoles() != null
-                && request.getRoles().stream().anyMatch(role -> !SELF_ASSIGNABLE_ROLE.equals(role))) {
+        if (request.roles() != null
+                && request.roles().stream().anyMatch(role -> !SELF_ASSIGNABLE_ROLE.equals(role))) {
             throw new BusinessRuleViolationException("ROLE_NOT_SELF_ASSIGNABLE",
                     "Only a caregiver account can be self-registered");
         }
@@ -58,10 +58,10 @@ public class AuthService {
                         SELF_ASSIGNABLE_ROLE + " is missing; V3__seed_roles.sql did not run"));
 
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
         user.setRoles(Set.of(role));
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
@@ -71,10 +71,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());
         String token = jwtService.generateToken(userDetails);
 
         return new AuthResponse(token);

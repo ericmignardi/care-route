@@ -1,7 +1,10 @@
 package com.careroute.backend.controller;
 
 import com.careroute.backend.config.JwtProperties;
+import com.careroute.backend.dto.AuthResponse;
 import com.careroute.backend.dto.CurrentUserResponse;
+import com.careroute.backend.dto.LoginRequest;
+import com.careroute.backend.dto.RegisterRequest;
 import com.careroute.backend.model.Caregiver;
 import com.careroute.backend.repository.CaregiverRepository;
 import com.careroute.backend.security.CustomUserDetails;
@@ -9,9 +12,6 @@ import com.careroute.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -44,7 +43,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         AuthResponse authResponse = authService.login(request);
 
-        ResponseCookie cookie = ResponseCookie.from("jwt", authResponse.getToken())
+        ResponseCookie cookie = ResponseCookie.from("jwt", authResponse.token())
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
                 .path("/")
@@ -79,32 +78,5 @@ public class AuthController {
                 .map(Caregiver::getId)
                 .orElse(null);
         return CurrentUserResponse.from(principal, caregiverId);
-    }
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class RegisterRequest {
-        private String username;
-        private String password;
-        private String firstName;
-        private String lastName;
-        private Set<String> roles;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class LoginRequest {
-        private String username;
-        private String password;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class AuthResponse {
-        private String token;
     }
 }
