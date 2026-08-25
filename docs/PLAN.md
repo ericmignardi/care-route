@@ -245,38 +245,60 @@ Additionally verified:
 
 ### Tasks
 
-- [ ] Install `react-router`, `zustand`, `motion`, `lucide-react`, `react-hook-form`, `@hookform/resolvers`, `date-fns`
-- [ ] Axios instance with `withCredentials: true` and a 401 interceptor that clears auth state and redirects to login
-- [ ] Zustand auth store, hydrated from `GET /auth/me` on load
-- [ ] `ThemeContext` via Context API for dark mode
-- [ ] Router with `ProtectedRoute` and `RoleRoute` wrappers
-- [ ] App shell: responsive sidebar, top bar, user menu, role-aware navigation
-- [ ] Base UI components: Button, Input, Select, Modal, Table, Badge, Skeleton, EmptyState, Toast
-- [ ] Zod schemas for auth forms; derive TypeScript types with `z.infer` so schemas are the single source of truth
-- [ ] Login and Register wired to the real backend
+- [x] ~~Install `react-router`, `zustand`, `motion`, `lucide-react`, `react-hook-form`, `@hookform/resolvers`, `date-fns`~~ — done. `react-router` 8 exports `createBrowserRouter` from the root and a DOM-specific `RouterProvider` from `react-router/dom`; the SPA uses the latter. No coordinate corrections were needed this time.
+- [x] ~~Axios instance with `withCredentials: true` and a 401 interceptor that clears auth state and redirects to login~~ — done, with **three paths excluded from the interceptor**. `/auth/login`, `/auth/register` and `/auth/me` return 401 as an *answer*, not as an expired session: bouncing a bad password to `/login` would swallow the server's message, and the hydration probe is expected to 401 for every signed-out visitor. The interceptor also does not navigate — it clears the store and lets `ProtectedRoute` react, which keeps `api/` from importing `stores/` and the two from forming a cycle.
+- [x] ~~Zustand auth store, hydrated from `GET /auth/me` on load~~ — done. The status is a three-state `unknown | authenticated | anonymous`, not a boolean. See the note below; the third state is the entire reason a hard refresh works.
+- [x] ~~`ThemeContext` via Context API for dark mode~~ — done, driven by `data-theme` on `<html>` to match the design canvas's own selector. The initial value is resolved by an inline script in `index.html` **before first paint**, so a caregiver opening the app at 05:30 never sees a flash of the light palette; `ThemeProvider` reads the same storage key and takes over from there.
+- [x] ~~Router with `ProtectedRoute` and `RoleRoute` wrappers~~ — done, plus `PublicOnlyRoute` (keeps a signed-in user off `/login` and `/register`) and `RoleLanding` (`/` is not a screen — it is a question about who is asking, and it answers `/dashboard` or `/my-visits`).
+- [x] ~~App shell: responsive sidebar, top bar, user menu, role-aware navigation~~ — done as a **top rail rather than a sidebar**, which is what the design canvas specifies. A coordinator working a 2160px-wide schedule grid should not surrender 240px of it to permanent chrome. Below `lg` the same role-filtered links move into a drawer, so the responsive requirement is met without the desktop cost. A skip link was added, since the navigation now sits above the content.
+- [x] ~~Base UI components: Button, Input, Select, Modal, Table, Badge, Skeleton, EmptyState, Toast~~ — done, transcribed from the design's component sheet rather than invented: four button variants across five states, the five status badges, table chrome with an inset focus ring, modal chrome, both toast tones, skeletons and the empty state. Added `Textarea`, `Spinner`, `StatusBadge`, `Field` and `ErrorState` — the last because NFR-11 wants three designed states and the sheet only named two of them as components.
+- [x] ~~Zod schemas for auth forms; derive TypeScript types with `z.infer`~~ — done. `registerSchema` uses a cross-field `.refine` for the password confirmation, which is the case a per-field schema cannot express.
+- [x] ~~Login and Register wired to the real backend~~ — done and exercised end to end in a browser, not merely compiled. Registration replays the server's field-error map onto the matching form fields and falls back to a banner when the names do not line up.
+
+Three items added during the phase that were not on the list:
+
+- [x] **A toast store, not a toast context.** Toasts are raised from submit handlers and from the API layer, neither of which wants a hook. A Zustand store with an imperative `toast.success/error/info` facade and a single `<Toaster/>` at the root is what lets Phase 5 surface a `ProblemDetail` sentence from anywhere without threading a provider through.
+- [x] **`errorMessage` / `errorRule` / `fieldErrors` helpers.** Phase 2 put the rule identity in the payload specifically so a client could branch on `CAREGIVER_DOUBLE_BOOKED` rather than parse prose. These three functions are where that payload gets unpacked, and they exist now so Phase 5's assign flow has one place to read rather than five.
+- [x] **Design tokens as a first-class layer.** `index.css` carries the canvas's variable names verbatim (`--pine`, `--mis-fg`, `--ink-2`) and `@theme inline` turns them into Tailwind utilities. Keeping the design's own names means a value can be diffed against the canvas without a translation step, and the light/dark swap is one block rather than a `dark:` variant on every element.
 
 ### Directory structure
 
 ```
 src/
-  api/          axios client, endpoint modules
-  components/   ui/, layout/
+  api/          axios client (interceptors, ProblemDetail helpers), auth endpoints
+  components/   ui/, layout/, routing/
   features/     auth/ clients/ caregivers/ visits/ dashboard/
-  hooks/        useClients, useVisits, useDebounce
-  stores/       authStore (Zustand)
-  context/      ThemeContext
-  lib/          dates, cn(), constants
-  types/        z.infer'd types
+  hooks/        useDebounce
+  stores/       authStore, toastStore (Zustand)
+  context/      ThemeContext, ThemeProvider
+  lib/          cn(), constants, dates, navigation, theme
+  types/        api (ProblemDetail, PageResponse), auth (z.infer'd)
   routes.tsx
 ```
 
 ### Exit criteria
 
-- Logging in through the UI lands on the dashboard with the user's name shown
-- A hard refresh preserves the session
-- Visiting a coordinator route as a caregiver redirects rather than rendering
-- Logout clears state and blocks back-navigation into protected routes
-- `npm run build` produces no TypeScript errors
+Verified in a browser against the seeded dataset and a running backend, not by inspection:
+
+- [x] Logging in through the UI lands on the dashboard with the user's name shown — `dana.coordinator` lands on `/dashboard`, with "Dana Whitcombe" and a `DW` monogram in the top rail
+- [x] A hard refresh preserves the session — Ctrl+Shift+R on `/dashboard` returns to `/dashboard`, still signed in
+- [x] Visiting a coordinator route as a caregiver redirects rather than rendering — `marcus.leblanc` navigating to `/clients` lands on `/my-visits`; the Clients page never mounts
+- [x] Logout clears state and blocks back-navigation into protected routes — signing out from `/clients` lands on `/login`, and Back into `/dashboard` redirects straight out again
+- [x] `npm run build` produces no TypeScript errors — and `npm run lint` is clean
+
+Additionally verified:
+
+- [x] **Role-aware navigation.** A coordinator sees Dashboard, Schedule, Clients, Caregivers and My day; a caregiver sees only My day. Hiding a link is a courtesy — every route is guarded independently and the API refuses regardless of what the UI renders.
+- [x] **A bad password shows the server's sentence, not a redirect.** "Invalid username or password" renders in the form's error banner and the user stays on `/login`, which is the interceptor exclusion doing its job.
+- [x] **Registration works end to end against the real API.** An account was created through the form, granted `ROLE_CAREGIVER` only, and landed on `/my-visits` on first sign-in. The test account was deleted afterwards so the demo dataset is exactly what `DevDataSeeder` produces.
+- [x] Zod validation renders per field, including the cross-field password mismatch; the theme toggle swaps the whole palette and persists; no React warnings or errors in the console.
+- [x] The demo-account table in `README.md` was wrong — it listed `coordinator` / `caregiver` / `admin` with `password`, none of which exist. Corrected to the seeder's actual `dana.coordinator` / `marcus.leblanc` / `priya.admin` with `Password123!`.
+
+> **The three-state auth status is the whole trick.** A boolean `isAuthenticated` starts `false`, and on a hard refresh the router reads it in the frame before `GET /auth/me` answers — so a signed-in coordinator is bounced to the login screen they were already past. `unknown` makes the guard decline to decide: it renders a loader until the probe resolves. It costs one extra state and it is the difference between a session that survives a refresh and one that merely appears to.
+
+> **Nothing about the session is persisted to the browser.** The JWT is in an httpOnly cookie the frontend cannot read, and the store lives in memory only. That is not only an XSS argument — it is what makes logout actually work. A store rehydrated from `localStorage` would let the back button restore a user object the server has already invalidated, and the UI would render a signed-in shell over an API returning 401 to everything.
+
+> **The design canvas was imported before any screen was built.** `docs/DESIGN-BRIEF.md` said to extract the component sheet into tokens first, and that is what stops five screens from drifting apart. The palette, the type pairing (Newsreader for titles and numerals, Public Sans for UI), the five status treatments, the 38px control height and the single focus ring are all transcribed rather than approximated. Phase 5 builds screens out of these; it does not get to invent new greens.
 
 ---
 

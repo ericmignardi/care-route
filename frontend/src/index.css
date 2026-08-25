@@ -1,1 +1,227 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens transcribed from the CareRoute design canvas (docs/DESIGN-BRIEF.md →
+ * claude.ai/design). The variable names are the design's own, so a value can be diffed
+ * against the canvas without a translation step.
+ *
+ * Dark mode is driven by data-theme on <html>, set before first paint by the inline
+ * script in index.html and thereafter by ThemeProvider — caregivers work early mornings
+ * and late evenings and need to override the OS.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --canvas: #e2dccf;
+  --bg: #f7f3eb;
+  --panel: #fcfaf4;
+  --sunken: #efe9dd;
+  --raise: #fffdf8;
+
+  --line: #ded6c6;
+  --line-2: #c9bfab;
+  --line-3: #b2a68f;
+
+  --ink: #231f19;
+  --ink-2: #5c5346;
+  --ink-3: #867c6d;
+  --ink-4: #a79c8a;
+
+  --pine: #1e4335;
+  --pine-h: #152f25;
+  --pine-on: #fbfaf5;
+  --pine-acc: #1e4335;
+  --pine-tint: #e4ebe5;
+  --pine-line: #b4c9bd;
+
+  /* Five visit states. Never carried by hue alone — every badge pairs these with a
+     glyph and a word, because coordinators scan them all day and some are colour-blind. */
+  --sch-bg: #e9e6de;
+  --sch-fg: #4c565e;
+  --sch-bd: #c6c3ba;
+  --prg-bg: #fae7c6;
+  --prg-fg: #7f4f0c;
+  --prg-bd: #d99b2f;
+  --don-bg: #e6ede5;
+  --don-fg: #3b6449;
+  --don-bd: #c1d2c3;
+  --can-bg: #ebe7de;
+  --can-fg: #867c6d;
+  --can-bd: #d3ccbd;
+  --mis-bg: #f6e1d7;
+  --mis-fg: #933e24;
+  --mis-bd: #dcab98;
+
+  --ring: #1e4335;
+  --shim: #e5dfd1;
+}
+
+[data-theme="dark"] {
+  --canvas: #0e0d0b;
+  --bg: #171510;
+  --panel: #1f1c17;
+  --sunken: #131210;
+  --raise: #272319;
+
+  --line: #332f27;
+  --line-2: #453f34;
+  --line-3: #5b5245;
+
+  --ink: #f2ece1;
+  --ink-2: #bdb3a3;
+  --ink-3: #8d8574;
+  --ink-4: #6d6559;
+
+  --pine: #2e6250;
+  --pine-h: #3a7864;
+  --pine-on: #f0f6f1;
+  --pine-acc: #88bda2;
+  --pine-tint: #1c2c25;
+  --pine-line: #35544a;
+
+  --sch-bg: #25231f;
+  --sch-fg: #aab5bd;
+  --sch-bd: #3b3934;
+  --prg-bg: #33260e;
+  --prg-fg: #eab65e;
+  --prg-bd: #7c5c1f;
+  --don-bg: #1d2a21;
+  --don-fg: #83ac8f;
+  --don-bd: #33473a;
+  --can-bg: #211e19;
+  --can-fg: #7d7465;
+  --can-bd: #332f27;
+  --mis-bg: #331e16;
+  --mis-fg: #e39676;
+  --mis-bd: #6c3a28;
+
+  --ring: #8fc7ac;
+  --shim: #2a2620;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-sunken: var(--sunken);
+  --color-raise: var(--raise);
+
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-3: var(--line-3);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+
+  --color-pine: var(--pine);
+  --color-pine-h: var(--pine-h);
+  --color-pine-on: var(--pine-on);
+  --color-pine-acc: var(--pine-acc);
+  --color-pine-tint: var(--pine-tint);
+  --color-pine-line: var(--pine-line);
+
+  --color-sch-bg: var(--sch-bg);
+  --color-sch-fg: var(--sch-fg);
+  --color-sch-bd: var(--sch-bd);
+  --color-prg-bg: var(--prg-bg);
+  --color-prg-fg: var(--prg-fg);
+  --color-prg-bd: var(--prg-bd);
+  --color-don-bg: var(--don-bg);
+  --color-don-fg: var(--don-fg);
+  --color-don-bd: var(--don-bd);
+  --color-can-bg: var(--can-bg);
+  --color-can-fg: var(--can-fg);
+  --color-can-bd: var(--can-bd);
+  --color-mis-bg: var(--mis-bg);
+  --color-mis-fg: var(--mis-fg);
+  --color-mis-bd: var(--mis-bd);
+
+  --color-ring: var(--ring);
+  --color-shim: var(--shim);
+
+  --font-sans: "Public Sans", -apple-system, system-ui, sans-serif;
+  --font-display: "Newsreader", Georgia, serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* Tabular figures everywhere a time or a count appears — a schedule grid whose
+       digits do not align vertically looks broken. */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+    text-wrap: pretty;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* One ring for everything: 2px pine at 2px offset, so it reads on bone, on oatmeal
+     and on the pine fill itself. In dark mode the ring lightens. */
+  *:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--pine-tint);
+    color: var(--ink);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+  }
+
+  .label-caps {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Oatmeal on bone, one warm sweep. Only the lead line of a group animates —
+     fifteen shimmering rows is a migraine. */
+  .shimmer {
+    background: linear-gradient(90deg, var(--sunken) 0%, var(--shim) 50%, var(--sunken) 100%);
+    background-size: 320px 100%;
+    animation: crShim 1.3s linear infinite;
+  }
+}
+
+@keyframes crShim {
+  0% {
+    background-position: -320px 0;
+  }
+  100% {
+    background-position: 320px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}

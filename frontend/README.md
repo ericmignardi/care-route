@@ -1,75 +1,60 @@
-# React + TypeScript + Vite
+# CareRoute — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + TypeScript + Vite. See the [repository README](../README.md) for the product,
+and [docs/PLAN.md](../docs/PLAN.md) for what each phase built.
 
-Currently, two official plugins are available:
+## Run it
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The API must be running first (`docker compose up -d` at the repository root, then
+`./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` in `backend/`).
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # tsc -b && vite build
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`VITE_API_URL` points the client at the API; see [.env.example](./.env.example). It can be
+left unset locally — the axios client defaults to `http://localhost:8080/api/v1`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## How it is organised
 
 ```
+src/
+  api/          axios client (withCredentials, 401 interceptor, ProblemDetail helpers)
+  components/   ui/ design-system primitives · layout/ shell · routing/ guards
+  features/     auth/ clients/ caregivers/ visits/ dashboard/
+  hooks/        useDebounce
+  stores/       authStore, toastStore (Zustand)
+  context/      ThemeContext, ThemeProvider
+  lib/          cn(), constants, dates, navigation, theme
+  types/        api (ProblemDetail, PageResponse), auth (z.infer'd from the Zod schemas)
+  routes.tsx
+```
+
+## Three things worth knowing before editing
+
+**The design system lives in `src/index.css`.** Colour, type and spacing are CSS custom
+properties transcribed from the [design canvas](../docs/DESIGN-BRIEF.md) under their own
+names — `--pine`, `--ink-2`, `--mis-fg` — and `@theme inline` turns them into Tailwind
+utilities (`bg-panel`, `text-ink-2`, `border-line`). Dark mode swaps the variables in one
+`[data-theme="dark"]` block rather than needing a `dark:` variant on every element. Add a
+token there; do not hardcode a hex in a component.
+
+**Auth state has three values, not two.** `unknown | authenticated | anonymous`. The route
+guards refuse to decide while the status is `unknown`, which is the frame between first
+paint and `GET /auth/me` answering. Treating "not yet known" as "signed out" is what makes
+a hard refresh bounce a signed-in user to the login screen.
+
+**Nothing about the session is stored in the browser.** The JWT is in an httpOnly cookie
+the frontend cannot read, and the Zustand store is memory-only by design — a persisted
+store would let the back button restore a user the server has already signed out.
+
+## Errors
+
+The API returns RFC 7807 `application/problem+json`, and its `detail` is written to be read
+by a person: *"Marcus Delaney is already booked 10:00–11:30."* Surface that, never a generic
+failure string. `errorMessage(error)` extracts it, `errorRule(error)` gives the business
+rule that rejected the request (`CAREGIVER_DOUBLE_BOOKED`, `CAREGIVER_MISSING_SKILL`, …) for
+branching, and `fieldErrors(error)` gives the bean-validation map for replaying onto a form.

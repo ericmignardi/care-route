@@ -153,9 +153,9 @@ Seeded by the `dev` profile.
 
 | Role | Username | Password |
 |---|---|---|
-| Coordinator | `coordinator` | `password` |
-| Caregiver | `caregiver` | `password` |
-| Admin | `admin` | `password` |
+| Coordinator | `dana.coordinator` | `Password123!` |
+| Caregiver | `marcus.leblanc` | `Password123!` |
+| Admin | `priya.admin` | `Password123!` |
 
 ### Full stack in Docker
 
