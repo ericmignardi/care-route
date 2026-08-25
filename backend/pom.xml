@@ -150,6 +150,26 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                        The *IT suffix marks the Testcontainers-backed tests, which is worth keeping
+                        as a signal in the file names. Surefire's defaults stop at *Test/*Tests, so
+                        without this the whole integration suite is silently skipped by `mvn test`
+                        and the build stays green while proving nothing. They are included here
+                        rather than handed to Failsafe deliberately: there is one database and one
+                        cached Spring context, so splitting the run would double the setup cost to
+                        separate suites that take seconds either way.
+                    -->
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
                     <execution>

@@ -189,22 +189,49 @@ Additionally verified beyond the stated criteria:
 
 ### Tasks
 
-- [ ] Testcontainers Postgres base class shared across integration tests
-- [ ] For **each** of BR-1 through BR-6: one passing test and one rejecting test
-- [ ] Boundary test for BR-1: a visit ending exactly when another begins must **not** conflict (half-open interval)
-- [ ] Unit tests for `canTransitionTo` covering every legal and illegal transition
-- [ ] MockMvc security tests: unauthenticated returns 401; wrong role returns 403; caregiver accessing another's visit returns 403
-- [ ] One optimistic-locking test: concurrent updates to the same visit, second one returns 409
+- [x] ~~Testcontainers Postgres base class shared across integration tests~~ — done as `AbstractIntegrationTest`. The container is a JVM-wide singleton started in a static initialiser rather than a per-class `@Container`, and every subclass declares identical context configuration, so the whole suite starts one database and one Spring context. Testcontainers 2.0 moved the class to `org.testcontainers.postgresql.PostgreSQLContainer`; the legacy `org.testcontainers.containers` coordinate still exists but is not the one to write against.
+- [x] ~~For **each** of BR-1 through BR-6: one passing test and one rejecting test~~ — done, with more than one of each where the rule has distinct failure modes. Every test method is prefixed with the rule it covers (`br1_`, `br2_`, …) so the mapping is greppable rather than asserted.
+- [x] ~~Boundary test for BR-1: a visit ending exactly when another begins must **not** conflict (half-open interval)~~ — done in both directions (a visit starting when another ends, and ending when another begins), plus a one-minute-overlap test on the other side of the boundary. All three are what caught the deliberate mutation below.
+- [x] ~~Unit tests for `canTransitionTo` covering every legal and illegal transition~~ — done as an exhaustive 25-pair matrix. The legal set is transcribed from the PRD state diagram as data rather than re-derived from the switch, so the test is a specification and not a mirror: adding a case to the entity fails it until the diagram here is updated deliberately.
+- [x] ~~MockMvc security tests: unauthenticated returns 401; wrong role returns 403; caregiver accessing another's visit returns 403~~ — done, driven through the real filter chain with real JWTs rather than `@WithMockUser`. That was not a stylistic choice: the controllers take `@AuthenticationPrincipal CustomUserDetails`, and a mock principal of a different type arrives as null.
+- [x] ~~One optimistic-locking test: concurrent updates to the same visit, second one returns 409~~ — done, split in two. See the note below.
+
+Two items added during the phase that were not on the list:
+
+- [x] **A controllable `Clock`.** `MutableClock` plus a `@Primary` bean in `TestClockConfig` is what makes BR-4's tolerance testable at all: "31 minutes early" becomes a fact the test states rather than a race against the wall clock. The Phase 2 decision to inject a `Clock` instead of calling `Instant.now()` is what made this a ten-line test file.
+- [x] **Surefire configuration.** The first full run reported 46 green tests and skipped every integration class in silence — Surefire's default includes stop at `*Test`/`*Tests`, and `*IT` is Failsafe's convention. The suffix is worth keeping as a signal, so Surefire's `<includes>` were widened instead. A build that stays green while running none of the tests that matter is the worst possible failure mode for this phase, and it was one line of configuration away.
 
 ### Deliverables
 
-- Roughly 20–25 tests, weighted toward business rules rather than getters
+- 74 test methods (104 executions once the transition matrix is parameterised), every one of them about a business rule, an authorization boundary, or a lifecycle transition. Nothing asserts a getter.
 
 ### Exit criteria
 
-- `./mvnw test` is green from a clean state
-- Every row in the PRD business-rule table maps to at least one named test
-- Deliberately breaking the overlap query causes a test to fail (verify this once — a test that cannot fail is not a test)
+- [x] `./mvnw test` is green from a clean state — 104 executions, 0 failures, ~35s including container start
+- [x] Every row in the PRD business-rule table maps to at least one named test — see the table below
+- [x] Deliberately breaking the overlap query causes a test to fail — verified by relaxing `scheduledStart < :end` to `<=` in `findOverlappingForCaregivers`. Exactly three tests failed, all of them the boundary cases, and nothing else moved. The mutation was reverted.
+
+| Rule | Named tests |
+|---|---|
+| BR-1 | `br1_anOverlappingVisitMakesTheCaregiverIneligible`, `br1_aVisitStartingExactlyWhenAnotherEndsDoesNotConflict`, `br1_aVisitEndingExactlyWhenAnotherBeginsDoesNotConflict`, `br1_oneMinuteOfOverlapStillConflicts`, `br1_aCancelledVisitDoesNotConflict`, `br1_theVisitBeingReassignedDoesNotConflictWithItself`, `br1_schedulingAnOverlappingVisitIsAConflict`, `br1_aVisitAbuttingAnExistingOneIsAccepted`, `br1_anOverlappingVisitIs409WithTheRule` |
+| BR-2 | `br2_aWindowInsideTheAvailabilityBlockIsEligible`, `br2_aWindowFillingTheAvailabilityBlockExactlyIsEligible`, `br2_aWindowStartingBeforeAvailabilityOpensIsRejected`, `br2_aWindowEndingAfterAvailabilityClosesIsRejected`, `br2_aCaregiverWhoDoesNotWorkThatDayIsRejected`, `br2_aWindowBridgingTwoAvailabilityBlocksIsRejected`, `br2_schedulingOutsideAvailabilityIsUnprocessable`, `br2_assigningACaregiverWhoDoesNotWorkThatDayIsUnprocessable` |
+| BR-3 | `br3_aCaregiverHoldingTheRequiredSkillIsEligible`, `br3_aCaregiverMissingTheRequiredSkillIsRejected`, `br3_assigningACaregiverWithoutTheRequiredSkillIsUnprocessable`, `br3_aCaregiverHoldingTheRequiredSkillCanBeAssigned`, `br3_aCaregiverWithoutTheRequiredSkillIs422WithTheRule` |
+| BR-4 | `br4_checkingInOnTimeStartsTheVisit`, `br4_checkingInAtTheEdgeOfToleranceIsAccepted`, `br4_checkingInTooEarlyIsRejected`, `br4_checkingInTooLateIsRejected`, `br4_checkingIntoAVisitAlreadyUnderWayIsRejected`, `br4_checkingIntoACancelledVisitIsRejected` |
+| BR-5 | `br5_checkingOutCompletesTheVisit`, `br5_checkingOutOfAScheduledVisitIsRejected`, `br5_checkingOutTwiceIsRejected`, `br5_inProgressLeadsOnlyToCompleted` |
+| BR-6 | `br6_aCompletedVisitCannotBeCancelled` (entity and service), `br6_aScheduledVisitCanBeCancelled` (entity and service), `br6_anInProgressVisitCannotBeCancelled`, `br6_cancellingACompletedVisitIs409` |
+| BR-7 | `br7_aCaregiverCanReadTheirOwnVisit`, `br7_aCaregiverCannotReadAnotherCaregiversVisit`, `br7_aCaregiverCannotCheckIntoAnotherCaregiversVisit`, `br7_theAssignedCaregiverCanCheckIn`, `br7_aCoordinatorCanReadAnyVisitButCannotCheckIntoIt` |
+| BR-8 | `br8_theSecondWriterOfAStaleVisitIsRejected`, `br8_theVersionAdvancesOnEveryWrite`, `br8_anOptimisticLockingFailureIsReportedAs409`, `br8_theHibernateSubclassIsHandledToo` |
+
+Additionally verified:
+
+- [x] The eligibility screen and the assignment path cannot drift: `theBatchPathAndTheSingleCaregiverPathAgree` evaluates the same caregivers both ways and asserts the verdicts are equal. That property is the entire justification for the batch-first design in Phase 2, and it was previously only argued rather than tested.
+- [x] Reason ordering is deterministic under multiple simultaneous failures (`everyFailureIsReportedInRuleOrder`), which is what makes the 422-beats-409 collapse in the assignment path predictable.
+- [x] The full field loop composes: check in, complete both tasks, add a note, check out, with `checkedInAt` before `checkedOutAt`.
+- [x] Validation failures still carry the field-error map over the wire, and both 401 and 403 come back as `application/problem+json` from the filter chain.
+
+> **BR-8 needed two tests, not one, and neither is a thread race.** The realistic failure is not simultaneous writes — it is two coordinators who both opened the visit, one of whom saves second against a copy the first has already superseded. `br8_theSecondWriterOfAStaleVisitIsRejected` reproduces exactly that, deterministically, and asserts the first writer's value survived. Getting to a literal `409` from there needs the second half: the API takes no version in any request body, so no HTTP request can currently carry a stale version, and forcing a genuine race through MockMvc would buy flakiness rather than confidence. `br8_anOptimisticLockingFailureIsReportedAs409` closes the loop by asserting the handler mapping directly. Worth being explicit about, because "one test, returns 409" reads as a single end-to-end assertion and this is honestly not that.
+
+> **The transition matrix is the test worth pointing at in an interview.** Twenty-five assertions generated from a table of legal transitions that was transcribed from the PRD, not extracted from the code. It costs nothing to run and it fails the moment the entity and the specification disagree — which is the only thing a state-machine test can usefully do.
 
 > Skip line-coverage targets. Chasing a percentage produces tests for DTO constructors. Twenty tests that encode the domain rules are worth more to a reviewer than eighty that assert Lombok works.
 
