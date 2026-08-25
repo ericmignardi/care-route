@@ -8,6 +8,7 @@ export { Field } from "./Field";
 export { controlClasses } from "./controlClasses";
 export { Input, Textarea } from "./Input";
 export { Modal } from "./Modal";
+export { Pagination } from "./Pagination";
 export { Select } from "./Select";
 export type { SelectOption } from "./Select";
 export { Skeleton, SkeletonRows } from "./Skeleton";

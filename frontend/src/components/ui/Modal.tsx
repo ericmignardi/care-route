@@ -14,11 +14,18 @@ interface ModalProps {
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  /** Opts out of the default body padding, for panels whose rows run edge to edge. */
+  bodyClassName?: string;
 }
 
-const SIZES = { sm: "max-w-[420px]", md: "max-w-[560px]", lg: "max-w-[760px]" } as const;
+const SIZES = {
+  sm: "max-w-[420px]",
+  md: "max-w-[560px]",
+  lg: "max-w-[760px]",
+  xl: "max-w-[820px]",
+} as const;
 
 /**
  * Esc dismisses, Tab cycles inside, and focus returns to whatever opened it. Trapping
@@ -34,6 +41,7 @@ export function Modal({
   footer,
   size = "md",
   className,
+  bodyClassName,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
@@ -119,7 +127,12 @@ export function Modal({
           </button>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto px-[18px] py-[15px] text-[13px] leading-[1.6] text-ink-2">
+        <div
+          className={cn(
+            "max-h-[70vh] overflow-y-auto text-[13px] leading-[1.6] text-ink-2",
+            bodyClassName ?? "px-[18px] py-[15px]",
+          )}
+        >
           {children}
         </div>
 

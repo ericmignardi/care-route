@@ -7,13 +7,23 @@ import { LoginPage } from "./features/auth/LoginPage";
 import { RegisterPage } from "./features/auth/RegisterPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { ClientsPage } from "./features/clients/ClientsPage";
+import { ClientDetailPage } from "./features/clients/ClientDetailPage";
 import { CaregiversPage } from "./features/caregivers/CaregiversPage";
+import { CaregiverDetailPage } from "./features/caregivers/CaregiverDetailPage";
 import { SchedulePage } from "./features/visits/SchedulePage";
+import { VisitDetailPage } from "./features/visits/VisitDetailPage";
 import { MyVisitsPage } from "./features/visits/MyVisitsPage";
+import { MyVisitDetailPage } from "./features/visits/MyVisitDetailPage";
 import { NotFoundPage } from "./features/NotFoundPage";
 import { RoleLanding } from "./components/routing/RoleLanding";
 import { COORDINATOR_ROLES } from "./lib/constants";
 
+/**
+ * Two surfaces, not one. `/visits/:id` is the coordinator's read of a visit and is
+ * role-gated; `/my-visits/:id` is the caregiver's field screen for the same row and is
+ * not, because "the caregiver this visit is assigned to" is a relationship the server
+ * checks per row (BR-7), not a role the router can decide from.
+ */
 export const router = createBrowserRouter([
   {
     element: <PublicOnlyRoute />,
@@ -35,10 +45,14 @@ export const router = createBrowserRouter([
               { path: "dashboard", element: <DashboardPage /> },
               { path: "schedule", element: <SchedulePage /> },
               { path: "clients", element: <ClientsPage /> },
+              { path: "clients/:id", element: <ClientDetailPage /> },
               { path: "caregivers", element: <CaregiversPage /> },
+              { path: "caregivers/:id", element: <CaregiverDetailPage /> },
+              { path: "visits/:id", element: <VisitDetailPage /> },
             ],
           },
           { path: "my-visits", element: <MyVisitsPage /> },
+          { path: "my-visits/:id", element: <MyVisitDetailPage /> },
           { path: "*", element: <NotFoundPage /> },
         ],
       },

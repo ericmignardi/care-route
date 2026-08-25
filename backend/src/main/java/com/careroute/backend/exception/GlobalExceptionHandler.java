@@ -21,6 +21,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Translates exceptions into RFC 7807 {@code application/problem+json} responses.
@@ -31,6 +32,7 @@ import java.util.Map;
  * without parsing prose.
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     private static final String PROBLEM_BASE = "https://careroute.dev/problems/";
@@ -139,9 +141,17 @@ public class GlobalExceptionHandler {
                 "not-found", request);
     }
 
+    /**
+     * The message is deliberately generic. Anything reaching here is unhandled, so its
+     * message is whatever the failing layer happened to say — a constraint violation put
+     * the table name, the column list and the offending values straight onto the wire for
+     * anyone to read. The real cause goes to the log, where it is useful and not public.
+     */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGlobalException(Exception ex, WebRequest request) {
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(),
+        log.error("Unhandled exception on {}", request.getDescription(false), ex);
+        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
+                "Something went wrong on our side. The problem has been logged.",
                 "internal-error", request);
     }
 

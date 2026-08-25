@@ -310,27 +310,77 @@ Additionally verified:
 
 ### Tasks
 
-- [ ] **Clients** — paginated searchable table, create/edit modal, detail view with care plan editor and visit history
-- [ ] **Caregivers** — list, detail with skills editor, weekly availability editor (7 rows of day/start/end)
-- [ ] **Schedule board** — day view grouped by caregiver, date navigation, status filters. Week view only if time permits.
-- [ ] **Assign flow** — the product's signature interaction. On opening, call `eligible-caregivers`; render eligible caregivers as selectable and ineligible ones dimmed **with their reason shown inline** ("Booked 10:00–11:30", "Not available Tuesdays", "Missing: NURSING"). Do not hide ineligible caregivers — showing why is the entire point.
-- [ ] **Visit detail** — status timeline, task checklist, notes, coordinator actions
-- [ ] **My Visits** (caregiver) — mobile-first day list, large check-in/check-out targets, task checkboxes with optimistic UI and rollback on error
-- [ ] Surface `ProblemDetail` messages in toasts rather than generic failure text
-- [ ] Loading, empty, and error states on every async view (NFR-11)
+- [x] ~~**Clients** — paginated searchable table, create/edit modal, detail view with care plan editor and visit history~~ — done. The care plan is **add-and-remove rather than edit-in-place**, because the API deliberately has no update endpoint for a task: a visit copies the plan at scheduling time, so silently rewording a task would make two visits claim to have done different things under the same id. Removing and re-adding is the honest operation, and the panel says so.
+- [x] ~~**Caregivers** — list, detail with skills editor, weekly availability editor (7 rows of day/start/end)~~ — done, with one deviation. Each of the seven day rows holds **as many windows as the caregiver actually works**, not one. A split shift is a real thing and the seed already contains multi-window days; a strict one-row-per-day editor would have silently deleted the second half of one.
+- [x] ~~**Schedule board** — day view grouped by caregiver, date navigation, status filters~~ — done: 240px sticky caregiver column, 160px hour columns, 46px lanes, 36px blocks, the time-aligned unassigned rail, a NOW marker that only renders when the board is showing today, and a legend carrying per-status counts. Week view stayed cut (descope #1). The day lives in the query string, so "the schedule for Thursday" is a link.
+- [x] ~~**Assign flow** — the product's signature interaction~~ — done, and it does not re-evaluate a single rule in the browser. `reasons[]` is what the same `VisitEligibilityChecker` that guards the assignment endpoint concluded, so the screen and the server cannot drift. Ineligible caregivers stay at full contrast with a fixed reason column, and clicking one **tries the assignment anyway** — the refusal that comes back is the proof that the UI is a courtesy and the server is the authority.
+- [x] ~~**Visit detail** — status timeline, task checklist, notes, coordinator actions~~ — done as **two screens, not one**. `/visits/:id` is the coordinator's read and is role-gated; `/my-visits/:id` is the caregiver's field surface and is not, because "the caregiver this visit is assigned to" is a per-row relationship the server checks (BR-7), not a role the router can decide from. The coordinator's checklist is deliberately inert: `requireViewAccess` lets them read it and `requireOwnership` does not let them tick it, so an actionable checkbox there would be a lie the API refuses.
+- [x] ~~**My Visits** (caregiver) — mobile-first day list, large check-in/check-out targets, task checkboxes with optimistic UI and rollback on error~~ — done. The rollback is real: the tick applies instantly, and a failed request puts it back rather than leaving the caregiver believing they recorded something they did not.
+- [x] ~~Surface `ProblemDetail` messages in toasts rather than generic failure text~~ — done everywhere, via the Phase 4 `errorMessage`/`errorRule` helpers. BR-4 is the one worth watching: checking in early shows the server's sentence naming the time check-in actually opens.
+- [x] ~~Loading, empty, and error states on every async view (NFR-11)~~ — done, including shaped skeletons (a board skeleton with lanes, a table skeleton with rows) rather than one spinner everywhere.
+
+Four items added during the phase that were not on the list:
+
+- [x] **`useAsync`, keyed by string rather than by dependency array.** Every screen loads one or two resources and refetches after its own mutations, so React Query would be machinery the problem does not have. Two things the key buys that a dep array could not: loading becomes *derived* — "the key I want" versus "the key I have" — instead of a second piece of state an effect has to set, and a key cannot be accidentally unstable. The first draft took a dep array and `MyVisitsPage` passed a `Date` into it; `fromDateParam` builds a new instance every render, so it never compared equal to itself and refetched forever. That loop only ever shows up as a hot laptop.
+- [x] **`ScheduleVisitModal` creates the visit unassigned, then hands it to the assign flow.** Folding "who takes it" into the create form would mean either hiding the ineligible caregivers or showing eleven refusals inside a create dialog — and the refusals are the part worth reading.
+- [x] **Dashboard KPI tiles and the unassigned worklist, pulled forward from Phase 6.** Exit criterion 6 is "observe the KPI change", which is not verifiable against a placeholder. Both come from one response, so it was the tiles or an unverifiable phase. The chart and the count-up motion stayed in Phase 6.
+- [x] **Control sizing moved into `controlClasses`.** See the note below; this one was a bug, not a preference.
+
+### Bugs found and fixed
+
+Four, all found by using the thing rather than by reading it.
+
+- [x] **A stale JWT cookie locked the user out of the login screen.** `JwtAuthenticationFilter` caught the JWT *parsing* failures but not `UsernameNotFoundException` — a well-formed, correctly signed, unexpired token naming a user who no longer exists. It escaped the filter and aborted the request before any handler ran, so `POST /auth/login` returned 401 and the only cure was clearing site data by hand. Found by reseeding the database while a browser still held a session, which is exactly what a restore or a redeploy does to every signed-in user. Covered by `StaleSessionIT`.
+- [x] **`PUT /caregivers/{id}/availability` failed on any unchanged day.** Clearing the collection and re-adding equal rows in one persistence context puts the inserts ahead of the orphan-removal deletes in Hibernate's action queue, so the new `MONDAY 08:00` row collided with the old one on `uq_availability_slot`. Resubmitting an unchanged week is the *ordinary* case — a coordinator who edits Thursday resubmits Monday to Wednesday untouched — so the editor was broken for almost every real save. Fixed with a `saveAndFlush` between the clear and the adds; covered by `CaregiverAvailabilityIT`.
+- [x] **The 500 handler was echoing raw SQL to the browser.** The constraint violation above arrived in the UI complete with the table name, the column list and the offending values. `@ExceptionHandler(Exception.class)` was returning `ex.getMessage()`, which for anything unhandled is whatever the failing layer happened to say. It now returns a fixed sentence and logs the real cause.
+- [x] **Every compact control was silently rendering at the form height.** `cn` is a plain join with no tailwind-merge — a deliberate Phase 4 decision, on the stated condition that no caller passes conflicting utilities for the same property. Passing `h-[34px]` alongside the `h-[38px]` that `controlClasses` emits does not override it; it emits both and lets stylesheet order decide. Measured, not guessed: every search box was 38px and the availability time inputs were full-width instead of 116px. Size is now a parameter of `controlClasses` and fixed widths live on a wrapper, which keeps the Phase 4 invariant true rather than quietly false.
+
+### Directory structure added
+
+```
+src/
+  api/          clients, caregivers, visits, dashboard
+  features/
+    clients/    ClientsPage, ClientDetailPage, ClientFormModal, clientSchema
+    caregivers/ CaregiversPage, CaregiverDetailPage, CaregiverFormModal
+    visits/     SchedulePage, ScheduleBoard, ScheduleVisitModal,
+                AssignCaregiverModal, VisitDetailPage,
+                MyVisitsPage, MyVisitDetailPage, visitSchema
+    dashboard/  DashboardPage
+  hooks/        useAsync
+  lib/          schedule (board geometry), dates (+ day bounds, countdowns)
+  types/        domain
+```
 
 ### Exit criteria
 
-The full loop, performed entirely in the browser with no API client:
+The full loop, performed entirely in a browser against the seeded dataset with no API client:
 
-1. Log in as coordinator, create a client, add two care plan tasks
-2. Schedule a visit; observe at least one caregiver excluded with a stated reason
-3. Assign an eligible caregiver
-4. Log in as that caregiver on a 375px viewport
-5. Check in, complete both tasks, add a note, check out
-6. Return to the coordinator dashboard and observe the KPI change
+| # | Step | Result |
+|---|---|---|
+| 1 | Log in as coordinator, create a client, add two care plan tasks | Nikolai Petrov created, landed on his detail page, two tasks added — stat strip read "2 tasks" |
+| 2 | Schedule a visit; observe at least one caregiver excluded with a stated reason | "5 caregivers evaluated. 2 can take this visit." Three excluded across three categories: `QUALIFICATION` "Missing: PERSONAL_SUPPORT", `AVAILABILITY` "Not available Tuesdays", and one caregiver carrying **two** stacked reasons |
+| 3 | Assign an eligible caregiver | Marcus LeBlanc assigned; visit history updated to Scheduled |
+| 4 | Log in as that caregiver on a narrow viewport | See the note below on 375px |
+| 5 | Check in, complete both tasks, add a note, check out | Checked in 13:13, both tasks ticked and struck through, note autosaved ("Saved · visible to your coordinator"), checked out; day list went to "3 of 3 done" |
+| 6 | Return to the coordinator dashboard and observe the KPI change | Visits today **7 to 8**, and all three tiles matched a `SELECT` against the database exactly (8 / 5 / 1) |
 
-Also: attempting a conflicting assignment shows a readable error, not a stack trace.
+- [x] **Attempting a conflicting assignment shows a readable error, not a stack trace** — clicking a blocked caregiver returned "Cannot assign this visit / Missing: PERSONAL_SUPPORT / `CAREGIVER_MISSING_SKILL`" in an inline alert.
+
+Additionally verified:
+
+- [x] `npm run build` produces no TypeScript errors, and `npm run lint` is clean.
+- [x] `./mvnw clean test` is green — **110 executions**, up from 104, the six new ones covering the two backend bugs above.
+- [x] Both mutations reverted deliberately: removing the flush failed 3 of the 4 availability tests (the empty-week case correctly still passed, since nothing is re-inserted), and narrowing the filter's catch failed both stale-session tests.
+- [x] Zero console errors or React warnings across every new screen.
+- [x] Dark mode holds on the board, the assign modal and the field screens — the palette swap is one block, not a `dark:` variant per element.
+- [x] The availability editor round-trips both directions: adding a Saturday window saved, and removing it saved again, leaving the seed exactly as `DevDataSeeder` produces it.
+
+> **On the 375px viewport.** Chrome on Windows clamps a window to 500px wide, so the literal 375px in the criterion could not be exercised — 500px was, which is below the `sm` breakpoint and therefore puts every mobile branch in play, and the caregiver column is `max-w-[560px]` so it is the same rendering path. Worth stating plainly rather than ticking the box: the layout is verified mobile-first, but not at that exact width. A Phase 6 Playwright run with a real device viewport would close it properly.
+
+> **The assign screen is the thing to point at in an interview, and the reason is the column that is not there.** There is no "why not" *computation* in the frontend at all — no skill comparison, no overlap check, no availability arithmetic. The screen renders `reasons[]` and nothing else. That is what makes "the UI and the server cannot disagree" a structural fact rather than a promise, and it is why clicking a blocked caregiver to try anyway is safe to offer: the refusal comes from the same checker that drew the list.
+
+> **Three of the four bugs were only findable by running the app against a database that had changed underneath it.** Reseeding mid-session produced the stale-cookie lockout; saving an availability form nobody had ever submitted produced the flush ordering and the SQL leak behind it. None would have surfaced from reading the code, and none had a failing test until one was written afterwards. The build was green the entire time all four were live.
 
 ---
 
@@ -342,9 +392,9 @@ Also: attempting a conflicting assignment shows a readable error, not a stack tr
 
 ### Tasks
 
-- [ ] Dashboard KPI tiles from `/dashboard/summary`
+- [x] ~~Dashboard KPI tiles from `/dashboard/summary`~~ — done in Phase 5; its exit criterion 6 ("observe the KPI change") is not verifiable against a placeholder
 - [ ] Visits-per-day chart for the current week (Recharts, or Tailwind bars — the chart is not worth an extra dependency if time is short)
-- [ ] Unassigned upcoming visits list, each linking to its assign flow
+- [x] ~~Unassigned upcoming visits list, each linking to its assign flow~~ — done in Phase 5, since it arrives in the same `/dashboard/summary` response as the tiles
 - [ ] Motion: page transitions, list enter/exit, KPI count-ups. Restraint here reads as more professional than abundance.
 - [ ] Accessibility sweep: keyboard traversal, visible focus rings, labelled inputs, AA contrast, modal focus trapping
 - [ ] Frontend tests with Vitest + React Testing Library + MSW — about 8, covering the assign flow, route guards, and one form validation path

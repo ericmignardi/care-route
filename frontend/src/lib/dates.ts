@@ -1,4 +1,12 @@
-import { format, formatDistanceStrict, isSameDay, parseISO } from "date-fns";
+import {
+  addDays,
+  format,
+  formatDistanceStrict,
+  isSameDay,
+  isToday,
+  parseISO,
+  startOfDay,
+} from "date-fns";
 
 /**
  * A 24-hour clock throughout, per the design brief. Times are formatted once, here, so
@@ -48,3 +56,51 @@ export function formatRelative(value: string | Date, from: Date = new Date()): s
 export function toDateParam(value: Date): string {
   return format(value, "yyyy-MM-dd");
 }
+
+/**
+ * The unzoned local ISO the backend's `LocalDateTime` parameters expect. `toISOString()`
+ * would be wrong here: it converts to UTC, so an 08:00 Ancaster window becomes 12:00 or
+ * 13:00 depending on daylight saving, and the day filter silently returns the wrong day.
+ */
+export function toLocalIso(value: Date): string {
+  return format(value, "yyyy-MM-dd'T'HH:mm:ss");
+}
+
+/** The half-open day the schedule board asks for: [00:00 of the day, 00:00 of the next). */
+export function dayBounds(day: Date): { from: string; to: string } {
+  return {
+    from: toLocalIso(startOfDay(day)),
+    to: toLocalIso(startOfDay(addDays(day, 1))),
+  };
+}
+
+/** Minutes since midnight — the schedule board's unit for placing a block. */
+export function minutesOfDay(value: string | Date): number {
+  const date = toDate(value);
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+export function durationMinutes(start: string | Date, end: string | Date): number {
+  return Math.round((toDate(end).getTime() - toDate(start).getTime()) / 60000);
+}
+
+/** Parses `yyyy-MM-dd` from the URL back into a local Date, or today when it is absent. */
+export function fromDateParam(value: string | null | undefined): Date {
+  if (!value) return startOfDay(new Date());
+  const parsed = parseISO(value);
+  return Number.isNaN(parsed.getTime()) ? startOfDay(new Date()) : startOfDay(parsed);
+}
+
+/** "starts in 10 min" / "1 h 50 m late" — the urgency the unassigned worklist sorts by. */
+export function formatCountdown(target: string | Date, now: Date = new Date()): string {
+  const minutes = Math.round((toDate(target).getTime() - now.getTime()) / 60000);
+  const magnitude = Math.abs(minutes);
+  const span =
+    magnitude < 60
+      ? `${magnitude} min`
+      : `${Math.floor(magnitude / 60)} h ${String(magnitude % 60).padStart(2, "0")} m`;
+  if (minutes < 0) return `${span} late`;
+  return span;
+}
+
+export { isToday, startOfDay, addDays };

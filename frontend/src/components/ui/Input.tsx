@@ -1,7 +1,6 @@
 import type { InputHTMLAttributes } from "react";
 import { Field } from "./Field";
 import { controlClasses } from "./controlClasses";
-import { cn } from "../../lib/cn";
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "id"> {
   label: string;
@@ -71,7 +70,7 @@ export function Textarea({
           aria-describedby={describedBy}
           required={required}
           disabled={disabled}
-          className={cn(controlClasses(invalid), "h-auto py-2 leading-[1.5] resize-y")}
+          className={controlClasses(invalid, "auto", "resize-y")}
           {...rest}
         />
       )}

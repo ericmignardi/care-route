@@ -126,6 +126,12 @@ public class CaregiverService {
         validateWindows(request.windows());
 
         caregiver.getAvailability().clear();
+        // The flush is load-bearing. Hibernate's action queue runs inserts before
+        // orphan-removal deletes, so re-submitting an unchanged week made the new
+        // MONDAY 08:00 row collide with the old one on uq_availability_slot. Flushing
+        // the deletes first means "replace the week" behaves like a replace.
+        caregiverRepository.saveAndFlush(caregiver);
+
         request.windows().stream()
                 .sorted(Comparator.comparing(AvailabilityRequest::dayOfWeek).thenComparing(AvailabilityRequest::startTime))
                 .forEach(window -> caregiver.addAvailability(Availability.builder()

@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -57,8 +58,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-        } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException | IllegalArgumentException e) {
-            log.error("JWT authentication failed: {}", e.getMessage());
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException
+                 | IllegalArgumentException | UsernameNotFoundException e) {
+            // A token that cannot be resolved leaves the request anonymous and continues down
+            // the chain — it must never abort it. UsernameNotFoundException is the case that
+            // matters most: a well-formed, correctly signed, unexpired token naming a user who
+            // no longer exists (deleted account, restored database). Letting it escape the
+            // filter turned every request into a 401 *including* POST /auth/login, so the
+            // holder of a stale cookie could not sign back in without clearing it by hand.
+            log.debug("JWT authentication failed, continuing anonymously: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
