@@ -1,10 +1,6 @@
 import type { ReactNode, ThHTMLAttributes, TdHTMLAttributes } from "react";
 import { cn } from "../../lib/cn";
 
-/**
- * Coordinator tables are instruments: hairlines, tonal hover rather than a shadow, and
- * an inset focus ring so a focused row never changes height and shifts the rows below it.
- */
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn("overflow-x-auto rounded-[5px] border border-line-2 bg-panel", className)}>
@@ -24,7 +20,6 @@ export function TBody({ children }: { children: ReactNode }) {
 type SortDirection = "asc" | "desc" | null;
 
 interface ThProps extends Omit<ThHTMLAttributes<HTMLTableCellElement>, "className"> {
-  /** Pass `null` for a sortable column that is not the active sort. */
   sort?: SortDirection;
   onSort?: () => void;
   align?: "left" | "right";

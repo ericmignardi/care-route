@@ -16,9 +16,8 @@ export interface ClientQuery {
 }
 
 /**
- * Blank filters are dropped rather than sent empty: `?status=` binds to an empty string
- * on the server and fails enum conversion with a 400, which is a confusing way to say
- * "no filter".
+ * Blank filters are dropped rather than sent empty: `?status=` binds to an empty string on
+ * the server and fails enum conversion with a 400.
  */
 function clientParams(query: ClientQuery): Record<string, string | number> {
   const params: Record<string, string | number> = {
@@ -53,7 +52,6 @@ export const clientsApi = {
     return data;
   },
 
-  /** Deactivates. A client row is referenced by every visit ever performed for them. */
   async deactivate(id: string): Promise<void> {
     await api.delete(`/clients/${id}`);
   },

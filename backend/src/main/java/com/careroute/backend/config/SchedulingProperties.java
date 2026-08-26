@@ -6,12 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Operational policy that belongs to the agency rather than to the code.
- *
- * <p>The check-in tolerance (BR-4) is configurable because thirty minutes is a policy
- * choice, not a law, and because a demo run wants it loose while production wants it tight.
- * The zone matters because visits are stored as local wall-clock times: comparing "now"
- * against a scheduled start is only meaningful in the agency's own timezone.
+ * Agency policy rather than code. The zone is load-bearing: visits are stored as local
+ * wall-clock times, so comparing "now" against a scheduled start is only meaningful in
+ * the agency's own timezone.
  */
 @Configuration
 @ConfigurationProperties(prefix = "app.scheduling")

@@ -6,10 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * FR-4.1. {@code caregiverId} is optional: coordinators routinely block out a slot
- * before they know who will cover it.
- */
+/** FR-4.1. {@code caregiverId} is optional — a slot is often blocked out before it is covered. */
 public record ScheduleVisitRequest(
         @NotNull UUID clientId,
         UUID caregiverId,

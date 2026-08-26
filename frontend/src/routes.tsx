@@ -19,15 +19,11 @@ import { RoleLanding } from "./components/routing/RoleLanding";
 import { COORDINATOR_ROLES } from "./lib/constants";
 
 /**
- * Two surfaces, not one. `/visits/:id` is the coordinator's read of a visit and is
- * role-gated; `/my-visits/:id` is the caregiver's field screen for the same row and is
- * not, because "the caregiver this visit is assigned to" is a relationship the server
- * checks per row (BR-7), not a role the router can decide from.
- */
-/**
- * The route tree, exported separately from the browser router so the tests can mount the
- * same tree under a memory router. A guard tested against a hand-built route table is a
- * guard tested against a table that can drift from the one that ships.
+ * `/visits/:id` is the coordinator's read of a visit and is role-gated; `/my-visits/:id` is
+ * the caregiver's field screen for the same row and is not, because "the caregiver this
+ * visit is assigned to" is a per-row relationship the server checks (BR-7), not a role.
+ *
+ * Exported separately from the browser router so the tests mount the tree that ships.
  */
 export const routes: RouteObject[] = [
   {

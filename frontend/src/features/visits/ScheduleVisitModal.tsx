@@ -17,10 +17,8 @@ import {
 import type { ClientSummary, VisitDetail } from "../../types/domain";
 
 /**
- * Creates the visit unassigned. Assignment is a separate decision with its own screen —
- * folding "who takes it" into this form would mean either hiding the ineligible
- * caregivers or showing eleven refusals inside a create dialog, and the refusals are the
- * part worth reading. The caller opens the assign flow on the visit that comes back.
+ * Creates the visit unassigned. Assignment is a separate decision with its own screen; the
+ * caller opens the assign flow on the visit that comes back.
  */
 export function ScheduleVisitModal({
   open,
@@ -30,7 +28,6 @@ export function ScheduleVisitModal({
   onScheduled,
 }: {
   open: boolean;
-  /** Fixed when opened from a client's page; otherwise the form offers a picker. */
   client?: ClientSummary | null;
   defaultDate?: Date;
   onClose: () => void;
@@ -44,8 +41,8 @@ export function ScheduleVisitModal({
     formState: { errors, isSubmitting },
   } = useForm<ScheduleVisitFormValues>({ resolver: zodResolver(scheduleVisitSchema) });
 
-  // Only fetched when the picker is actually needed. Capped at the server's maximum page
-  // size; a real deployment would want a typeahead, and this is the honest simple version.
+  // Only fetched when the picker is needed, and capped at the server's maximum page size.
+  // A larger deployment would want a typeahead here.
   const clientOptions = useAsync(
     () =>
       open && !client

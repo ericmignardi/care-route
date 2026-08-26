@@ -9,7 +9,6 @@ const TONES: Record<BadgeTone, string> = {
   sch: "bg-sch-bg border-sch-bd text-sch-fg",
   prg: "bg-prg-bg border-prg-bd text-prg-fg",
   don: "bg-don-bg border-don-bd text-don-fg",
-  /* Cancelled is the one dashed border in the set — visibly de-emphasised. */
   can: "bg-can-bg border-can-bd text-can-fg border-dashed",
   mis: "bg-mis-bg border-mis-bd text-mis-fg",
 };
@@ -41,11 +40,6 @@ export function Badge({ tone = "neutral", glyph, children, className }: BadgePro
   );
 }
 
-/**
- * The five visit states. Colour never carries the meaning on its own — the glyph and the
- * word travel with it, because coordinators scan these hundreds of times a day and some
- * of them are colour-blind.
- */
 export function StatusBadge({
   status,
   className,

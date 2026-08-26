@@ -8,9 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Filters behind {@code GET /clients} (FR-2.2).
- */
+/** Filters behind {@code GET /clients} (FR-2.2). */
 public final class ClientSpecifications {
 
     private ClientSpecifications() {

@@ -11,10 +11,6 @@ export interface Toast {
   id: string;
   tone: ToastTone;
   title: string;
-  /**
-   * A real sentence with names, times and a street — never a code. The design sizes the
-   * toast for two lines of this at 12.5px.
-   */
   body?: string;
   actions?: ToastAction[];
   duration: number;
@@ -26,11 +22,6 @@ interface ToastState {
   dismiss: (id: string) => void;
 }
 
-/**
- * Rejections keep the same shape as successes so the eye lands in the same place; only
- * the glyph and the rule change. Errors linger longer because they carry the sentence
- * the coordinator has to act on.
- */
 const DEFAULT_DURATION: Record<ToastTone, number> = {
   success: 5000,
   info: 5000,
@@ -56,7 +47,6 @@ export const useToastStore = create<ToastState>((set) => ({
   },
 }));
 
-/** Imperative helpers, so a submit handler does not need the hook. */
 export const toast = {
   success: (title: string, body?: string) =>
     useToastStore.getState().push({ tone: "success", title, body }),

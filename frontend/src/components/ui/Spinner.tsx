@@ -1,9 +1,5 @@
 import { cn } from "../../lib/cn";
 
-/**
- * The design's ring spinner rather than a lucide glyph: it inherits the border colour of
- * whatever it sits on, so one component serves the pine, panel and clay buttons alike.
- */
 export function Spinner({ className }: { className?: string }) {
   return (
     <span

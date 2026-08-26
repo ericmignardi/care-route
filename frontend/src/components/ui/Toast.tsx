@@ -91,10 +91,6 @@ function ToastCard({ toast }: { toast: ToastModel }) {
   );
 }
 
-/**
- * Rejections keep the same shape as successes so the eye lands in the same place. Mounted
- * once at the app root; anything can raise one through `toast` in stores/toastStore.
- */
 export function Toaster() {
   const toasts = useToastStore((state) => state.toasts);
 

@@ -24,12 +24,9 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Translates exceptions into RFC 7807 {@code application/problem+json} responses.
- *
- * <p>Every problem carries a {@code timestamp} and a {@code path}. Domain failures
- * additionally carry a {@code rule} property naming the business rule that rejected
- * the request, so a client can distinguish "double booked" from "missing skill"
- * without parsing prose.
+ * Translates exceptions into RFC 7807 {@code application/problem+json} responses. Domain
+ * failures carry a {@code rule} property naming the business rule that rejected the request,
+ * so a client can tell "double booked" from "missing skill" without parsing prose.
  */
 @RestControllerAdvice
 @Slf4j
@@ -90,10 +87,6 @@ public class GlobalExceptionHandler {
         return problem(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), "forbidden", request);
     }
 
-    /**
-     * Request body validation. The field-error map is preserved from the pre-ProblemDetail
-     * handler and surfaced as the {@code errors} extension property.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
@@ -108,9 +101,6 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /**
-     * Validation on request parameters and path variables rather than the body.
-     */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ProblemDetail handleHandlerMethodValidation(HandlerMethodValidationException ex, WebRequest request) {
         return problem(HttpStatus.BAD_REQUEST, "Validation Failed",
@@ -142,10 +132,9 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * The message is deliberately generic. Anything reaching here is unhandled, so its
-     * message is whatever the failing layer happened to say — a constraint violation put
-     * the table name, the column list and the offending values straight onto the wire for
-     * anyone to read. The real cause goes to the log, where it is useful and not public.
+     * The message is deliberately generic: anything reaching here is unhandled, so its own
+     * message is whatever the failing layer said — a constraint violation would put the
+     * table, columns and offending values straight onto the wire. The cause goes to the log.
      */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGlobalException(Exception ex, WebRequest request) {

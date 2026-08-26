@@ -68,10 +68,7 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully!");
     }
 
-    /**
-     * FR-1.3. The frontend hydrates its auth store from here on load, so a hard refresh
-     * restores the session from the cookie rather than from anything stored in the browser.
-     */
+    /** FR-1.3. The frontend hydrates from here on load, so a refresh restores from the cookie. */
     @GetMapping("/me")
     public CurrentUserResponse me(@AuthenticationPrincipal CustomUserDetails principal) {
         UUID caregiverId = caregiverRepository.findByUserId(principal.getUserId())

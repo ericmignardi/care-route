@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * A stable page envelope. Serialising Spring Data's {@code Page} directly ties the
- * wire format to an internal type whose JSON shape is explicitly not contractual;
- * this record is the contract instead.
+ * The wire contract for a page. Spring Data's {@code Page} is not serialised directly
+ * because its JSON shape is explicitly not contractual.
  */
 public record PageResponse<T>(
         List<T> content,

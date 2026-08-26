@@ -7,9 +7,8 @@ import { LoginPage } from "./LoginPage";
 
 describe("login form", () => {
   it("refuses the round trip when the fields are empty", async () => {
-    // No /auth/login handler is registered. onUnhandledRequest is "error", so if the
-    // client-side schema let this submit through, the test fails rather than passing
-    // quietly — which is the only way to assert that a request did *not* happen.
+    // No /auth/login handler is registered, and onUnhandledRequest is "error", so if the
+    // schema let this submit through the test fails rather than passing quietly.
     renderComponent(<LoginPage />);
 
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
@@ -31,7 +30,7 @@ describe("login form", () => {
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
     // /auth/login is excluded from the 401 interceptor: a bad password is an answer, not
-    // an expired session, and bouncing it would swallow the message the server wrote.
+    // an expired session, and bouncing it would swallow the server's message.
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid username or password");
     expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });

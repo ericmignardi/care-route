@@ -10,10 +10,7 @@ export const authApi = {
     });
   },
 
-  /**
-   * Self-registration always yields a caregiver account. The backend rejects any request
-   * asking for a privileged role, so the form does not offer one.
-   */
+  /** Always yields a caregiver account — the backend rejects any privileged role. */
   async register(input: RegisterInput): Promise<void> {
     await api.post("/auth/register", {
       username: input.username,

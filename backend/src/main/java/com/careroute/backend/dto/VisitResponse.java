@@ -8,10 +8,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * List-shaped view of a visit. {@code caregiver} is null while the visit is unassigned,
- * which is a legitimate state (FR-4.1) rather than missing data.
- */
+/** {@code caregiver} is null while the visit is unassigned — a legitimate state (FR-4.1). */
 public record VisitResponse(
         UUID id,
         ClientSummary client,

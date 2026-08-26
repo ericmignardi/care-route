@@ -10,9 +10,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 /**
- * Replaces the application's system {@link Clock} with one the tests control. Declared
- * {@code @Primary} rather than same-named so the production bean definition stays intact
- * and nothing depends on bean-definition overriding being switched on.
+ * Replaces the system {@link Clock} with one the tests control. {@code @Primary} rather than
+ * same-named, so nothing depends on bean-definition overriding being switched on.
  */
 @TestConfiguration
 public class TestClockConfig {

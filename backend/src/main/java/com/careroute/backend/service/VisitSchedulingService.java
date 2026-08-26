@@ -40,9 +40,8 @@ import java.util.UUID;
  * Coordinator-side visit operations: schedule, assign, cancel, and the reads behind the
  * schedule board.
  *
- * <p>Every path that puts a caregiver on a visit funnels through
- * {@link #enforceEligibility}, which delegates to {@link VisitEligibilityChecker}. There is
- * no second copy of BR-1, BR-2 or BR-3 anywhere in this class.
+ * <p>Every path that puts a caregiver on a visit funnels through {@link #enforceEligibility},
+ * so there is no second copy of BR-1, BR-2 or BR-3 anywhere in this class.
  */
 @Service
 @RequiredArgsConstructor
@@ -55,9 +54,8 @@ public class VisitSchedulingService {
     private final VisitAccessGuard accessGuard;
 
     /**
-     * FR-4.1 and FR-4.6. The client's care plan is copied onto the visit at creation rather
-     * than referenced, so editing a care plan later never rewrites the record of what a
-     * completed visit actually involved.
+     * FR-4.1 and FR-4.6. The care plan is copied onto the visit at creation rather than
+     * referenced, so editing it later never rewrites what a completed visit involved.
      */
     @Transactional
     public VisitDetailResponse schedule(ScheduleVisitRequest request) {
@@ -93,9 +91,8 @@ public class VisitSchedulingService {
     }
 
     /**
-     * FR-4.2. The visit being reassigned is excluded from the overlap check, otherwise
-     * reassigning a visit to the same caregiver would report the visit as conflicting with
-     * itself.
+     * FR-4.2. The visit being reassigned is excluded from the overlap check, or it would be
+     * reported as conflicting with itself.
      */
     @Transactional
     public VisitDetailResponse assign(UUID visitId, UUID caregiverId) {
@@ -142,7 +139,7 @@ public class VisitSchedulingService {
         return VisitDetailResponse.from(visit);
     }
 
-    /** FR-5.1. Defaults to today, which is the only day a caregiver in the field cares about. */
+    /** FR-5.1. */
     @Transactional(readOnly = true)
     public List<VisitResponse> findMyVisits(CustomUserDetails principal, LocalDate date) {
         Caregiver caregiver = accessGuard.requireCaregiverProfile(principal);
@@ -156,9 +153,9 @@ public class VisitSchedulingService {
     }
 
     /**
-     * FR-3.4. Returns every active caregiver, eligible or not, each carrying the reasons it
-     * cannot take the slot. The same checker that would have rejected the assignment produces
-     * these answers, so the screen can never offer a caregiver the API would then refuse.
+     * FR-3.4. Every active caregiver, eligible or not, each carrying its reasons. The same
+     * checker that would reject the assignment produces these answers, so the screen can
+     * never offer a caregiver the API would then refuse.
      */
     @Transactional(readOnly = true)
     public List<CaregiverEligibilityResponse> findEligibleCaregivers(LocalDateTime start, LocalDateTime end,
@@ -178,8 +175,8 @@ public class VisitSchedulingService {
     }
 
     /**
-     * Turns a failed eligibility verdict into the right HTTP status: a double booking is a
-     * conflict with existing state (409), everything else is an unprocessable request (422).
+     * Turns a failed verdict into the right status: a double booking conflicts with existing
+     * state (409), everything else is unprocessable (422).
      */
     private void enforceEligibility(Caregiver caregiver, VisitWindow window, Skill requiredSkill, UUID excludedVisitId) {
         EligibilityResult result = eligibilityChecker.check(caregiver, window, requiredSkill, excludedVisitId);

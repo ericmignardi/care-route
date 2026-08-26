@@ -17,11 +17,8 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      {/*
-        One place decides how much the product moves. reducedMotion="user" makes every
-        motion component in the tree honour the OS setting, so the accessibility promise
-        is a property of the app rather than something each animation has to remember.
-      */}
+      {/* reducedMotion="user" makes every motion component in the tree honour the OS
+          setting, so no individual animation has to remember to. */}
       <MotionConfig reducedMotion="user">
         <RouterProvider router={router} />
         <Toaster />

@@ -19,9 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * FR-6.x. The coordinator's opening screen.
- */
+/** FR-6.x. */
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
@@ -54,8 +52,7 @@ public class DashboardService {
 
     /**
      * COMPLETED over (COMPLETED + MISSED) for the current week. Cancellations are excluded:
-     * a visit the agency cancelled was never an opportunity to complete, so counting it as a
-     * failure would penalise exactly the coordination the product is trying to encourage.
+     * a visit the agency cancelled was never an opportunity to complete.
      */
     private double completionRate(List<VisitTimeSlice> week) {
         long completed = week.stream().filter(s -> s.status() == VisitStatus.COMPLETED).count();
@@ -65,9 +62,8 @@ public class DashboardService {
     }
 
     /**
-     * FR-6.2. Every day of the week is present, including the empty ones, so the chart
-     * has a flat axis: a missing Sunday would otherwise shift Saturday into its slot and
-     * quietly redraw the week.
+     * FR-6.2. Every day is present, including the empty ones — a missing day would shift the
+     * next one into its slot and quietly redraw the week.
      */
     private List<DashboardSummaryResponse.DayCount> dayCounts(LocalDate weekStart, List<VisitTimeSlice> week) {
         Map<LocalDate, List<VisitTimeSlice>> byDay = week.stream()

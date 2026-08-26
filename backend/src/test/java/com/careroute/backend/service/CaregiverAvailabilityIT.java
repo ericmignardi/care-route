@@ -18,15 +18,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * {@code PUT /caregivers/{id}/availability} replaces the whole week, which makes resubmitting
- * an unchanged week the ordinary case rather than an edge one — a coordinator who opens the
- * editor, changes Thursday and saves resubmits Monday through Wednesday untouched.
+ * The whole-week replace makes resubmitting an unchanged week the ordinary case: a
+ * coordinator who changes only Thursday resubmits the rest untouched.
  *
  * <p>That was the broken case. Clearing the collection and re-adding equal rows in one
- * persistence context put the inserts ahead of the orphan-removal deletes in Hibernate's
- * action queue, so the new MONDAY 08:00 row collided with the old one on
- * {@code uq_availability_slot} and the whole save failed. These tests are about the ordering,
- * not the mapping.
+ * persistence context put the inserts ahead of the orphan-removal deletes, so the new row
+ * collided with the old on {@code uq_availability_slot}. These tests are about that ordering.
  */
 class CaregiverAvailabilityIT extends AbstractIntegrationTest {
 

@@ -5,10 +5,9 @@ import { API, HttpResponse, http, server } from "../../test/server";
 import { caregiver, coordinator } from "../../test/fixtures";
 
 /**
- * Route guards are a courtesy, not a security boundary — every endpoint refuses
- * independently, and BR-7 is enforced per row on the server. What these tests protect is
- * the other half of that claim: that the guarded screen never *mounts*, so a caregiver
- * following a stale link does not watch a coordinator page fill with 403s.
+ * Route guards are a courtesy, not a security boundary — the server refuses independently
+ * and enforces BR-7 per row. These tests protect the other half: that a guarded screen
+ * never mounts in the first place.
  */
 describe("route guards", () => {
   it("sends a signed-out visitor to the login screen", async () => {
@@ -20,8 +19,8 @@ describe("route guards", () => {
   it("redirects a caregiver away from a coordinator route without rendering it", async () => {
     server.use(
       http.get(`${API}/visits/mine`, () => HttpResponse.json([])),
-      // Deliberately absent: no /clients handler. onUnhandledRequest is "error", so if
-      // the guard let ClientsPage mount, its list call would fail the test outright.
+      // Deliberately absent: no /clients handler. onUnhandledRequest is "error", so if the
+      // guard let ClientsPage mount its list call would fail the test outright.
     );
 
     renderApp("/clients", caregiver);

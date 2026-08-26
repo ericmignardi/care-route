@@ -26,9 +26,8 @@ function open(overrides: Partial<Parameters<typeof AssignCaregiverModal>[0]> = {
 }
 
 /**
- * The assign screen is the product's signature interaction, and the property worth
- * testing is a negative one: it does not evaluate a single rule in the browser. Every
- * refusal these tests assert on is a string the server sent.
+ * The property worth testing is a negative one: the screen evaluates no rule in the
+ * browser. Every refusal asserted here is a string the server sent.
  */
 describe("assign flow", () => {
   it("shows every caregiver the server evaluated, with a reason on each refusal", async () => {

@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
-/**
- * No illustration. An empty queue is information: it says what is true, and what is
- * worth doing instead — so `action` is not optional decoration.
- */
 export function EmptyState({
   glyph,
   title,

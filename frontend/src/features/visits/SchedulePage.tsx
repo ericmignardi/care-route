@@ -27,9 +27,8 @@ import { ScheduleVisitModal } from "./ScheduleVisitModal";
 import { AssignCaregiverModal } from "./AssignCaregiverModal";
 
 /**
- * The board's day lives in the query string rather than in component state, so a
- * coordinator can send "the schedule for Thursday" as a link and the back button steps
- * through the days they actually looked at.
+ * The board's day lives in the query string, not in component state, so a day is
+ * linkable and the back button steps through the days actually looked at.
  */
 export function SchedulePage() {
   const navigate = useNavigate();
@@ -62,9 +61,8 @@ export function SchedulePage() {
   }
 
   /**
-   * Filtering here rather than server-side: the day is already fully loaded, and a
-   * round trip per keystroke would make the board flicker for a filter that is really a
-   * "find the row I mean" affordance.
+   * Filtered here rather than server-side: the day is already fully loaded, and a round
+   * trip per keystroke would make the board flicker.
    */
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -83,7 +81,7 @@ export function SchedulePage() {
     const needle = query.trim().toLowerCase();
     if (!needle) return all;
 
-    // Keep a lane if the caregiver matches, or if one of their surviving visits does —
+    // Keep a lane if the caregiver matches or one of their surviving visits does:
     // searching a client's name should reveal who is going, not empty the board.
     const withVisits = new Set(filtered.map((visit) => visit.caregiver?.id).filter(Boolean));
     return all.filter(
@@ -95,8 +93,8 @@ export function SchedulePage() {
 
   async function openAssign(visit: Visit) {
     try {
-      // The board holds a summary; the assign modal needs the full record, and fetching
-      // it here means the modal never renders against a half-populated visit.
+      // The board holds a summary; the assign modal needs the full record, so fetching it
+      // here keeps the modal from rendering against a half-populated visit.
       setAssigning(await visitsApi.get(visit.id));
     } catch (error) {
       toast.error("Could not open that visit", errorMessage(error));

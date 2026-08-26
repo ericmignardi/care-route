@@ -30,10 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * FR-2.x. Coordinators and admins only — caregivers reach client details through their own
- * visits, never through the client directory.
- */
+/** FR-2.x. Caregivers reach client details through their own visits, never this directory. */
 @RestController
 @RequestMapping("/api/v1/clients")
 @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")

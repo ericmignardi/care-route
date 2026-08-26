@@ -49,9 +49,8 @@ export const visitsApi = {
   },
 
   /**
-   * The answer to "who can take this, and why not the others?" — every caregiver comes
-   * back, eligible or not, each ineligible one carrying its reasons. Pass `visitId` when
-   * reassigning so the visit does not count as a conflict with itself.
+   * Every caregiver comes back, eligible or not, each ineligible one carrying its reasons.
+   * Pass `visitId` when reassigning so the visit does not conflict with itself.
    */
   async eligibleCaregivers(params: {
     start: string;

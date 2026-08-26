@@ -15,13 +15,9 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The visit lifecycle, PRD section 5.3. Pure unit tests: the state machine is a property of
- * the entity, not of the database.
- *
- * <p>The exhaustive matrix below states the legal transitions as data rather than re-deriving
- * them from the implementation. That is the difference between a test and a mirror: if the
- * switch in {@link Visit#canTransitionTo} gains a case, this fails until the diagram here is
- * updated deliberately.
+ * The visit lifecycle, PRD section 5.3. The matrix below states the legal transitions as
+ * data rather than re-deriving them from the implementation, so a new case in
+ * {@link Visit#canTransitionTo} fails here until this diagram is updated deliberately.
  */
 class VisitStatusTransitionTest {
 
@@ -57,8 +53,8 @@ class VisitStatusTransitionTest {
     }
 
     /**
-     * The narrower reading of BR-6 that the PRD state diagram makes explicit: a visit already
-     * under way is ended by checking out, not by cancelling it out from under the caregiver.
+     * BR-6 as the PRD state diagram reads it: a visit already under way is ended by checking
+     * out, not by cancelling it out from under the caregiver.
      */
     @Test
     @DisplayName("BR-6: a visit in progress cannot be cancelled either")

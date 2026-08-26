@@ -2,9 +2,8 @@ import { z } from "zod";
 import { SKILLS } from "../../lib/constants";
 
 /**
- * The form works in a date and two clock times because that is how a coordinator says it
- * out loud — "Tuesday, half eleven to half twelve". The two `LocalDateTime` values the
- * API wants are composed on submit, never typed.
+ * A date and two clock times, because that is how a coordinator says it out loud. The two
+ * `LocalDateTime` values the API wants are composed on submit, never typed.
  */
 export const scheduleVisitSchema = z
   .object({

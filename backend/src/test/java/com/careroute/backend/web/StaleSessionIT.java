@@ -13,15 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * A cookie holding a well-formed, correctly signed, unexpired token for a user who no longer
- * exists. Deleted account, restored database, reseeded environment — all produce it, and every
- * browser that held a session across the change carries one.
+ * A cookie holding a valid, unexpired token for a user who no longer exists — a deleted
+ * account, a restored database, a reseeded environment all produce one.
  *
  * <p>{@code JwtAuthenticationFilter} caught the JWT parsing failures but not the lookup
- * failure, so {@code UsernameNotFoundException} escaped the filter and aborted the request
- * before any handler ran. The visible symptom was the worst possible one: {@code POST
- * /auth/login} returned 401, so the holder of a stale cookie could not sign back in to replace
- * it without clearing site data by hand.
+ * failure, so {@code UsernameNotFoundException} escaped and aborted the request before any
+ * handler ran. {@code POST /auth/login} then returned 401, so the holder of a stale cookie
+ * could not sign back in without clearing site data by hand.
  */
 class StaleSessionIT extends AbstractIntegrationTest {
 

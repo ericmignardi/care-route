@@ -1,10 +1,5 @@
 import { cn } from "../../lib/cn";
 
-/**
- * The three control heights the design uses: 30px for toolbar chips, 34px for compact
- * inline fields, 38px for anything in a form. `auto` is for the textarea, which sizes to
- * its rows.
- */
 export type ControlSize = "sm" | "md" | "lg" | "auto";
 
 const SIZES: Record<ControlSize, string> = {
@@ -15,15 +10,10 @@ const SIZES: Record<ControlSize, string> = {
 };
 
 /**
- * Shared chrome for anything that looks like a text box, so Input, Textarea and Select
- * cannot drift apart. Lives outside Field.tsx because that file exports a component and
- * fast refresh wants one or the other.
- *
- * Size is a parameter rather than something a caller tacks on afterwards. `cn` is a plain
- * join with no tailwind-merge, so passing `h-[30px]` alongside the `h-[38px]` this
- * function emits does not override it — it emits both and lets stylesheet order decide,
- * which silently rendered every compact control at the form height. Anything that varies
- * per call site and collides on a property has to be chosen here, not appended.
+ * Size is a parameter, not something a caller appends: `cn` is a plain join with no
+ * tailwind-merge, so an `h-[30px]` passed alongside the `h-[38px]` emitted here does not
+ * override it — both are emitted and stylesheet order decides. Anything that varies per
+ * call site and collides on a property has to be chosen here.
  */
 export function controlClasses(invalid: boolean, size: ControlSize = "lg", extra?: string): string {
   return cn(

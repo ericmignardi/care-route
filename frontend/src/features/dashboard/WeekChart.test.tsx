@@ -9,8 +9,8 @@ describe("week chart", () => {
     renderComponent(<WeekChart days={summary.visitsThisWeek} />);
 
     const rows = within(screen.getByRole("table")).getAllByRole("row");
-    // One header row plus seven days — including Saturday, which has no visits at all.
-    // A chart that drops its empty days shifts every later bar into the wrong slot.
+    // One header row plus seven days, including the one with no visits at all: a chart
+    // that drops its empty days shifts every later bar into the wrong slot.
     expect(rows).toHaveLength(8);
 
     const tuesday = within(screen.getByRole("rowheader", { name: "Tue 25 Aug" }).closest("tr")!);

@@ -7,13 +7,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * A clock the tests can move.
- *
- * <p>BR-4 accepts a check-in only within a tolerance of the scheduled start, which is a
- * statement about the relationship between two times. Testing it against the wall clock
- * would mean scheduling a visit "about now" and hoping the assertion runs before the
- * tolerance expires. Pinning time instead makes the rule's boundaries addressable: the
- * test says exactly where "now" is and exactly where the visit is.
+ * A clock the tests can move. BR-4 accepts a check-in only within a tolerance of the
+ * scheduled start; testing that against the wall clock would mean scheduling a visit "about
+ * now" and hoping the assertion runs before the tolerance expires. Pinning time makes the
+ * rule's boundaries addressable.
  */
 public class MutableClock extends Clock {
 

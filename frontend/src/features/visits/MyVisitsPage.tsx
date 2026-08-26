@@ -23,12 +23,6 @@ import type { Visit } from "../../types/domain";
 
 const DONE_STATUSES = new Set(["COMPLETED", "CANCELLED", "MISSED"]);
 
-/**
- * The caregiver's day, built mobile-first at 375px. This is a different product from the
- * coordinator's board and deliberately does not share its layout: Dana reads sixty rows
- * in an office, Marcus makes three large decisions on a cold porch with gloves on. The
- * primary action is never below the fold and never smaller than 52px.
- */
 export function MyVisitsPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -37,8 +31,8 @@ export function MyVisitsPage() {
   const day = fromDateParam(params.get("date"));
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
 
-  // Keyed on the formatted day, not the Date: `fromDateParam` builds a new instance
-  // every render, and a Date in a dependency array never compares equal to itself.
+  // Keyed on the formatted day, not the Date: `fromDateParam` builds a new instance every
+  // render, and a Date in a dependency array never compares equal to itself.
   const visits = useAsync(() => visitsApi.myVisits(toDateParam(day)), `my-visits ${toDateParam(day)}`);
 
   function goToDay(next: Date) {
@@ -56,8 +50,7 @@ export function MyVisitsPage() {
     const finished = all.filter((visit) => DONE_STATUSES.has(visit.status));
     const open = all.filter((visit) => !DONE_STATUSES.has(visit.status));
 
-    // Whatever is running wins; otherwise the next one due is the card that gets the
-    // full treatment. Everything after it is a compact row.
+    // Whatever is running wins; otherwise the next one due gets the full-size card.
     const running = open.find((visit) => visit.status === "IN_PROGRESS");
     const head = running ?? open[0] ?? null;
 

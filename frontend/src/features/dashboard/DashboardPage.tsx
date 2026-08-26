@@ -16,11 +16,6 @@ import type { Visit, VisitDetail } from "../../types/domain";
 import { AssignCaregiverModal } from "../visits/AssignCaregiverModal";
 import { WeekChart } from "./WeekChart";
 
-/**
- * Four readouts, one chart and one worklist. Everything on this page is either a number a
- * coordinator checks before lunch or a row they can act on; nothing here is present only
- * because a dashboard is expected to have something in that corner.
- */
 export function DashboardPage() {
   const navigate = useNavigate();
   const [assigning, setAssigning] = useState<VisitDetail | null>(null);
@@ -150,12 +145,6 @@ export function DashboardPage() {
                     <span className="w-[72px] shrink-0" />
                   </div>
 
-                  {/*
-                    The exit is the point of animating this list at all: assigning a visit
-                    removes it from the worklist, and a row that collapses out says the
-                    action landed. A row that simply vanishes leaves the coordinator
-                    checking whether anything happened.
-                  */}
                   <AnimatePresence initial={false}>
                     {summary.data.unassignedUpcomingVisits.map((visit) => {
                       const overdue = new Date(visit.scheduledStart).getTime() < today.getTime();
@@ -288,7 +277,6 @@ function Tile({
   );
 }
 
-/** Shaped like what is coming, not a spinner: four tiles, a plot and a worklist. */
 function DashboardSkeleton() {
   return (
     <div role="status" aria-label="Loading the dashboard" className="flex flex-col gap-5">

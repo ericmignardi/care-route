@@ -20,9 +20,9 @@ function Harness() {
 }
 
 /**
- * The focus trap, which `useFocusTrap` shares with the navigation drawer. Worth its own
- * test because every part of it fails silently: nothing throws when Tab escapes to the
- * page underneath, or when focus is left on a node that has just been unmounted.
+ * The focus trap `useFocusTrap` shares with the navigation drawer. Worth its own test
+ * because every part of it fails silently — nothing throws when Tab escapes to the page
+ * underneath, or when focus is left on a node that has just been unmounted.
  */
 describe("modal focus handling", () => {
   it("moves focus inside on open, cycles within, and hands it back on Esc", async () => {

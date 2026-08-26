@@ -1,10 +1,6 @@
 import type { CSSProperties } from "react";
 import { cn } from "../../lib/cn";
 
-/**
- * `lead` animates; everything else is a flat oatmeal bar. Fifteen shimmering rows at
- * once is a migraine, so only the first line of each group sweeps.
- */
 export function Skeleton({
   className,
   lead = false,
@@ -12,7 +8,6 @@ export function Skeleton({
 }: {
   className?: string;
   lead?: boolean;
-  /** For placeholders whose size is computed — the week chart bars are a percentage each. */
   style?: CSSProperties;
 }) {
   return (
@@ -24,7 +19,6 @@ export function Skeleton({
   );
 }
 
-/** A stand-in for a loading list: one sweeping lead line, then quiet rows. */
 export function SkeletonRows({ rows = 4, className }: { rows?: number; className?: string }) {
   return (
     <div className={cn("flex flex-col gap-3", className)} role="status" aria-label="Loading">

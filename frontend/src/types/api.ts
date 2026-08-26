@@ -1,8 +1,6 @@
 /**
- * The RFC 7807 body the backend returns for every failure, including 401 and 403 from
- * the filter chain. `rule` is the extension property that names the business rule that
- * rejected the request, so the UI can branch on CAREGIVER_DOUBLE_BOOKED rather than
- * parse prose; `errors` is the field-error map from bean validation.
+ * The RFC 7807 body the backend returns for every failure. `rule` names the business rule
+ * that rejected the request, so the UI can branch on it rather than parse prose.
  */
 export interface ProblemDetail {
   type?: string;
@@ -16,10 +14,6 @@ export interface ProblemDetail {
   path?: string;
 }
 
-/**
- * The page envelope the backend returns instead of Spring Data's `Page`, whose JSON
- * shape is explicitly not contractual.
- */
 export interface PageResponse<T> {
   content: T[];
   page: number;

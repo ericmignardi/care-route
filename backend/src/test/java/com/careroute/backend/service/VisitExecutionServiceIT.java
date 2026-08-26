@@ -20,10 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * BR-4 and BR-5 — the field loop.
- *
- * <p>Time is pinned through the injected {@link com.careroute.backend.support.MutableClock},
- * so "31 minutes early" is a fact the test states rather than a race it hopes to win.
+ * BR-4 and BR-5 — the field loop. Time is pinned through the injected
+ * {@link com.careroute.backend.support.MutableClock}, so "31 minutes early" is a fact the
+ * test states rather than a race it hopes to win.
  */
 class VisitExecutionServiceIT extends AbstractIntegrationTest {
 
@@ -172,10 +171,7 @@ class VisitExecutionServiceIT extends AbstractIntegrationTest {
                 .extracting("rule").isEqualTo("VISIT_NOT_IN_PROGRESS");
     }
 
-    /**
-     * The whole caregiver workflow in one pass. Each step is covered individually above; this
-     * asserts they compose, which is the thing a demo actually does.
-     */
+    /** Each step is covered individually above; this asserts they compose. */
     @Test
     @DisplayName("the field loop: check in, complete the tasks, add a note, check out")
     void theFieldLoopRunsEndToEnd() {

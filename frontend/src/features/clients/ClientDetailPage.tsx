@@ -224,10 +224,9 @@ function StatCell({ label, value, last }: { label: string; value: string; last?:
 }
 
 /**
- * The care plan is add-and-remove rather than edit-in-place: the API deliberately has no
- * update endpoint for a task, because a visit copies the plan at scheduling time and a
- * silently reworded task would make two visits claim to have done different things under
- * the same id. Removing and re-adding is the honest operation.
+ * Add-and-remove rather than edit-in-place: a visit copies the plan at scheduling time, so
+ * a silently reworded task would make two visits disagree under the same id. The API has
+ * no update endpoint for a task for the same reason.
  */
 function CarePlanPanel({
   clientId,
@@ -389,10 +388,9 @@ function CarePlanPanel({
   );
 }
 
-/** Month rules give a long history a spine to scan against, per the design. */
 function MonthGroupedVisits({ visits }: { visits: Visit[] }) {
-  // Derived up front rather than by mutating a cursor while mapping: React may render a
-  // list more than once, and a variable carried across iterations would come back stale.
+  // Derived up front rather than by mutating a cursor while mapping: React may render the
+  // list more than once, and a variable carried across iterations comes back stale.
   const rows = visits.map((visit, index) => {
     const month = format(parseISO(visit.scheduledStart), "MMMM yyyy");
     const previous =

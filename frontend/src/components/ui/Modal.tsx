@@ -8,13 +8,11 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  /** The line under the title — a client name and a time window, not a restatement. */
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
-  /** Opts out of the default body padding, for panels whose rows run edge to edge. */
   bodyClassName?: string;
 }
 
@@ -25,12 +23,6 @@ const SIZES = {
   xl: "max-w-[820px]",
 } as const;
 
-/**
- * Esc dismisses, Tab cycles inside, and focus returns to whatever opened it — all of it
- * from `useFocusTrap`, which the navigation drawer shares. Trapping focus is the part
- * that is genuinely hard to add later, so it was here from the start rather than waiting
- * for the accessibility sweep.
- */
 export function Modal({
   open,
   onClose,

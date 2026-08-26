@@ -14,7 +14,6 @@ import { formatTime } from "../../lib/dates";
 import { cn } from "../../lib/cn";
 import type { Caregiver, Visit } from "../../types/domain";
 
-/** Status colour as inline custom properties, so one block markup serves all five. */
 const TONE_VARS: Record<string, { bg: string; bd: string; fg: string }> = {
   sch: { bg: "var(--sch-bg)", bd: "var(--sch-bd)", fg: "var(--sch-fg)" },
   prg: { bg: "var(--prg-bg)", bd: "var(--prg-bd)", fg: "var(--prg-fg)" },
@@ -27,18 +26,15 @@ function initials(first: string, last: string): string {
   return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
 }
 
-/** "M. Deacon" — the row already carries the caregiver, so the surname is what matters. */
 function shortName(first: string, last: string): string {
   return `${first.charAt(0)}. ${last}`;
 }
 
 /**
- * The day board. One lane per caregiver, one absolutely-positioned block per visit, and a
- * separate rail across the top for everything nobody is coming to yet.
- *
- * The unassigned rail is time-aligned to the same hour columns as the lanes below it, so
- * an unfilled 09:30 visit sits directly above whichever caregiver has a gap at 09:30 —
- * that vertical relationship is the whole reason the rail is a rail and not a sidebar.
+ * One lane per caregiver, one absolutely-positioned block per visit, and a rail across the
+ * top for the unassigned. The rail shares the lanes' hour columns, so an unfilled 09:30
+ * visit sits directly above whichever caregiver has a gap at 09:30 — which is why it is a
+ * rail and not a sidebar.
  */
 export function ScheduleBoard({
   caregivers,
@@ -49,7 +45,6 @@ export function ScheduleBoard({
 }: {
   caregivers: Caregiver[];
   visits: Visit[];
-  /** The wall clock, only used when the board is showing today. Null suppresses the marker. */
   now: Date | null;
   onOpenVisit: (visit: Visit) => void;
   onAssign: (visit: Visit) => void;
@@ -79,7 +74,6 @@ export function ScheduleBoard({
     <div className="overflow-hidden rounded-[6px] border border-line-2 bg-bg">
       <div className="overflow-x-auto">
         <div style={{ width: LABEL_WIDTH + range.width }} className="relative">
-          {/* The unassigned rail. Clay, because five people are expecting someone. */}
           <div
             className="flex border-b-2 border-mis-bd bg-mis-bg"
             style={{ minHeight: unassigned.length > 0 ? 76 : 58 }}
@@ -146,7 +140,6 @@ export function ScheduleBoard({
             </div>
           </div>
 
-          {/* Hour ruler */}
           <div className="flex h-[30px] border-b border-line-2 bg-sunken">
             <div
               className="sticky left-0 z-[4] flex shrink-0 items-center justify-between border-r border-line-2 bg-sunken px-3"
@@ -170,7 +163,6 @@ export function ScheduleBoard({
             </div>
           </div>
 
-          {/* Caregiver lanes */}
           <div className="relative">
             {caregivers.map((caregiver) => {
               const lane = assigned.get(caregiver.id) ?? [];

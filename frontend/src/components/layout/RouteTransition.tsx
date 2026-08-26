@@ -3,25 +3,16 @@ import { useLocation, useOutlet } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 
 /**
- * The page transition, and the only one in the product.
- *
- * `useOutlet()` rather than `<Outlet/>` is the load-bearing detail. An `<Outlet/>` placed
- * inside `AnimatePresence` renders whatever the *current* route is, so during a
- * `mode="wait"` exit the outgoing panel would already be showing the incoming screen and
- * the transition would read as a flicker. Capturing the element at render time gives the
- * exiting panel something stable to hold while it leaves.
- *
- * Six pixels and 180ms: enough to say "this is a different page", not enough to stand
- * between a coordinator and the next screen forty times an hour. `MotionConfig
- * reducedMotion="user"` in `App` drops it to a plain opacity change — and then to nothing
- * — for anyone who has asked the OS for less movement.
+ * `useOutlet()` rather than `<Outlet/>` is the load-bearing detail: an `<Outlet/>` inside
+ * `AnimatePresence` renders whatever the current route is, so during a `mode="wait"` exit
+ * the outgoing panel would already show the incoming screen and read as a flicker.
+ * Capturing the element at render time gives the exiting panel something stable to hold.
  */
 export function RouteTransition() {
   const location = useLocation();
   const outlet = useOutlet();
 
-  // A route change is a new document as far as the reader is concerned; inheriting the
-  // previous screen's scroll offset means landing halfway down a page you have not read.
+  // Inheriting the previous screen's scroll offset lands the reader halfway down a new page.
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname]);

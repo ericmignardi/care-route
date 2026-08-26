@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * {@link VisitWindow} is where "a visit must end after it starts" is enforced once, so that
- * no scheduling path has to remember to check it.
+ * {@link VisitWindow} enforces "a visit must end after it starts" once, so no scheduling
+ * path has to remember to check it.
  */
 class VisitWindowTest {
 

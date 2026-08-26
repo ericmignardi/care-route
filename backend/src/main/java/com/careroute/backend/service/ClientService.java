@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * FR-2.x. Clients are deactivated rather than deleted: a client row is referenced by every
- * visit ever performed for them, and a care record that can vanish is not a care record.
+ * FR-2.x. Clients are deactivated, never deleted — every visit ever performed references
+ * the client row.
  */
 @Service
 @RequiredArgsConstructor

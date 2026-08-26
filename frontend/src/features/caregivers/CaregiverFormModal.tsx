@@ -10,7 +10,6 @@ import { SKILLS, SKILL_LABELS } from "../../lib/constants";
 import { cn } from "../../lib/cn";
 import type { CaregiverDetail } from "../../types/domain";
 
-/** Mirrors `CreateCaregiverRequest`, including the server's 8-character password floor. */
 const createCaregiverSchema = z.object({
   firstName: z.string().trim().min(1, "Enter a first name").max(100, "100 characters at most"),
   lastName: z.string().trim().min(1, "Enter a last name").max(100, "100 characters at most"),
@@ -32,9 +31,8 @@ const EMPTY: CreateCaregiverValues = {
 };
 
 /**
- * Creates the login and the profile in one request (FR-1.4). Self-registration only ever
- * grants ROLE_CAREGIVER and creates no profile, so this is the only route to an account
- * that can actually be scheduled.
+ * Creates the login and the profile in one request (FR-1.4) — self-registration creates no
+ * profile, so this is the only route to an account that can be scheduled.
  */
 export function CaregiverFormModal({
   open,

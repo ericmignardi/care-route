@@ -16,8 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * The wire contract for domain failures: the status, and the machine-readable {@code rule} a
- * frontend branches on. Covered here rather than over HTTP because these mappings are what
- * the rest of the suite's exception-type assertions rely on to mean anything.
+ * frontend branches on.
  */
 class GlobalExceptionHandlerTest {
 

@@ -4,14 +4,12 @@ import { formatDayMedium, formatDayTick } from "../../lib/dates";
 import { cn } from "../../lib/cn";
 import type { DayCount } from "../../types/domain";
 
-/** The plot area, in px. Three gridline bands of 72px, exactly as the design canvas draws it. */
 const PLOT_HEIGHT = 216;
 const BANDS = 3;
 
 /**
- * Rounded up to something a person would actually print on an axis. Without this the top
- * tick reads 41 or 17 and the reader has to divide to place a bar; with it the axis is
- * always thirds of a round number and the three gridlines land exactly on the labels.
+ * Rounded up so the axis is always thirds of a round number and the three gridlines land
+ * exactly on the labels, rather than a top tick of 41 the reader has to divide.
  */
 const NICE_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
 
@@ -22,16 +20,12 @@ function axisMaximum(highest: number): number {
 }
 
 /**
- * Visits per day for the current week, assigned against unassigned.
+ * Visits per day for the current week, assigned against unassigned. Drawn in CSS: seven
+ * bars of two segments does not justify Recharts and its d3 dependencies in the bundle.
  *
- * Drawn in CSS rather than with a charting library. Seven bars of two segments each does
- * not justify pulling Recharts and its d3 dependencies into the bundle, and the design
- * specifies exact geometry — 52px bars, a 216px plot, 72px gridline bands — which is
- * easier to honour directly than to talk a chart library into.
- *
- * The two segments are the assigned remainder and the unassigned share, so they sum to
- * the number printed above the bar. A stacked chart whose parts do not add up to its own
- * label is worse than no chart: it is quietly wrong rather than absent.
+ * The two segments are the assigned remainder and the unassigned share, so they sum to the
+ * number printed above the bar — a stack whose parts do not add up to its own label is
+ * quietly wrong rather than absent.
  */
 export function WeekChart({ days }: { days: DayCount[] }) {
   const reduceMotion = Boolean(useReducedMotion());
@@ -60,11 +54,8 @@ export function WeekChart({ days }: { days: DayCount[] }) {
         </div>
       </div>
 
-      {/*
-        The drawing is hidden from assistive technology: a div of coloured divs says
-        nothing useful read aloud. The same numbers follow as a real table, which is both
-        the accessible reading of the chart and the one a coordinator can copy out of.
-      */}
+      {/* Hidden from assistive technology — a div of coloured divs says nothing read
+          aloud. The same numbers follow as a real table. */}
       <div aria-hidden="true" className="mt-5 flex flex-1 flex-col">
         <div className="flex flex-1 gap-3.5">
           <div className="relative w-[26px] flex-none" style={{ height: PLOT_HEIGHT }}>
@@ -180,11 +171,6 @@ export function WeekChart({ days }: { days: DayCount[] }) {
   );
 }
 
-/**
- * One coloured band. It grows from the baseline on first paint, which is the only motion
- * on this screen that carries meaning — bars rising is how a bar chart says "these are
- * quantities". Under prefers-reduced-motion it simply appears at full height.
- */
 function Segment({
   value,
   axisMax,

@@ -1,10 +1,7 @@
 import { Button } from "./Button";
 import { cn } from "../../lib/cn";
 
-/**
- * The third designed state every asynchronous surface needs (NFR-11). The message is
- * the server's sentence where there is one, never "An error occurred".
- */
+/** NFR-11. The message is the server's sentence where there is one. */
 export function ErrorState({
   title = "That did not load",
   message,

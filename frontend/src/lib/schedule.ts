@@ -1,12 +1,8 @@
 import { minutesOfDay } from "./dates";
 
 /**
- * Board geometry, transcribed from the design canvas rather than chosen.
- *
- * 160px per hour is the load-bearing number: it makes a 30-minute visit 80px, which the
- * design established as the narrowest block that still holds a client name, a start time
- * and a skill. Narrower and the name starts truncating on every block rather than only
- * the long ones.
+ * Board geometry. 160px per hour is the load-bearing number: it makes a 30-minute visit
+ * 80px, the narrowest block that still holds a client name, a start time and a skill.
  */
 export const HOUR_WIDTH = 160;
 export const ROW_HEIGHT = 46;
@@ -14,14 +10,12 @@ export const LABEL_WIDTH = 240;
 export const BLOCK_HEIGHT = 36;
 export const MIN_BLOCK_WIDTH = 56;
 
-/** The default window. Anything outside it widens the board rather than being clipped. */
 const DEFAULT_START_HOUR = 7;
 const DEFAULT_END_HOUR = 19;
 
 export interface BoardRange {
   startHour: number;
   endHour: number;
-  /** Inclusive of the start, exclusive of the end — the column labels. */
   hours: number[];
   width: number;
 }
@@ -32,9 +26,8 @@ interface Windowed {
 }
 
 /**
- * A visit at 05:30 must not fall off the left edge, and one running to 21:00 must not be
- * clipped — a schedule board that hides visits is worse than no board. The default window
- * is only a floor.
+ * The default 07:00-19:00 window is only a floor: a visit at 05:30 must not fall off the
+ * left edge, and one running to 21:00 must not be clipped.
  */
 export function boardRange(visits: Windowed[]): BoardRange {
   let startHour = DEFAULT_START_HOUR;
@@ -57,7 +50,6 @@ export function boardRange(visits: Windowed[]): BoardRange {
   };
 }
 
-/** Where a block sits in the lane, in pixels from the lane's left edge. */
 export function blockGeometry(visit: Windowed, range: BoardRange): { left: number; width: number } {
   const originMinutes = range.startHour * 60;
   const start = minutesOfDay(visit.scheduledStart);
@@ -69,7 +61,6 @@ export function blockGeometry(visit: Windowed, range: BoardRange): { left: numbe
   };
 }
 
-/** Null when the board is not showing today, which is when the marker must not render. */
 export function nowOffset(range: BoardRange, now: Date): number | null {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const originMinutes = range.startHour * 60;

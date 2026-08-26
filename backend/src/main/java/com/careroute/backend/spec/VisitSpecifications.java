@@ -13,9 +13,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Composes the optional filters behind {@code GET /visits} (FR-4.4). Every filter is
- * independently optional, which is why this is a Specification rather than a combinatorial
- * pile of derived query methods.
+ * The optional filters behind {@code GET /visits} (FR-4.4). Every filter is independently
+ * optional, which is why this is a Specification rather than a pile of derived queries.
  */
 public final class VisitSpecifications {
 
@@ -47,14 +46,9 @@ public final class VisitSpecifications {
         };
     }
 
-    public static Specification<Visit> unassigned() {
-        return (root, query, cb) -> cb.isNull(root.get("caregiver"));
-    }
-
     /**
-     * Joins client and caregiver eagerly so rendering a page of visits does not fire a query
-     * per row (NFR-6). Skipped on the count query, where a fetch join is both useless and
-     * illegal.
+     * Joins client and caregiver eagerly so a page of visits does not fire a query per row
+     * (NFR-6). Skipped on the count query, where a fetch join is both useless and illegal.
      */
     private static void fetchToOneAssociations(jakarta.persistence.criteria.Root<Visit> root,
                                                jakarta.persistence.criteria.CriteriaQuery<?> query) {

@@ -11,10 +11,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-/**
- * Emits the same {@code application/problem+json} shape as {@link GlobalExceptionHandler}
- * for failures raised inside the filter chain, before any controller is reached.
- */
 @Component
 @AllArgsConstructor
 public class CustomAuthEntryPoint implements AuthenticationEntryPoint {

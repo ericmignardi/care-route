@@ -51,11 +51,7 @@ export const caregiversApi = {
     return data;
   },
 
-  /**
-   * A whole-week replace, not a per-row patch. The seven rows the editor shows are the
-   * schedule; submitting them is the only way to delete a window, and it keeps the
-   * client from having to diff.
-   */
+  /** A whole-week replace, not a per-row patch — the only way to delete a window. */
   async replaceAvailability(id: string, windows: AvailabilityInput[]): Promise<Availability[]> {
     const { data } = await api.put<Availability[]>(`/caregivers/${id}/availability`, { windows });
     return data;

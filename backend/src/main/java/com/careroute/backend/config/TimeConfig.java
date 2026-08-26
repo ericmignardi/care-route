@@ -8,9 +8,8 @@ import java.time.Clock;
 import java.time.ZoneId;
 
 /**
- * Supplies the clock the domain reads "now" from. Injecting it rather than calling
- * {@code Instant.now()} inline is what lets the BR-4 tolerance test pin time instead of
- * scheduling a visit relative to the wall clock and hoping.
+ * The clock the domain reads "now" from. Injected rather than called inline so the BR-4
+ * tolerance test can pin time instead of scheduling relative to the wall clock.
  */
 @Configuration
 @RequiredArgsConstructor

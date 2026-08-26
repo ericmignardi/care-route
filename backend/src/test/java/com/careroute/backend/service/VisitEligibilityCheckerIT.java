@@ -25,12 +25,11 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * BR-1, BR-2 and BR-3 against a real database, exercised through the one component that
- * evaluates them.
+ * BR-1, BR-2 and BR-3 against a real database, through the one component that evaluates them.
  *
- * <p>Transactional because that is how the checker runs in production: it is always called
- * from inside a service transaction, and its inputs are managed entities with lazily-loaded
- * skills. Testing it detached would test a situation that never occurs.
+ * <p>Transactional because that is how the checker runs in production — always inside a
+ * service transaction, on managed entities with lazily-loaded skills. Testing it detached
+ * would test a situation that never occurs.
  */
 @Transactional
 class VisitEligibilityCheckerIT extends AbstractIntegrationTest {
@@ -120,10 +119,9 @@ class VisitEligibilityCheckerIT extends AbstractIntegrationTest {
     }
 
     /**
-     * BR-2 says "entirely within <em>one</em> of the availability windows". A caregiver who
-     * works 08:00-12:00 and 13:00-17:00 cannot take an 11:00-14:00 visit, even though every
-     * minute of it is nominally covered by one block or the other: the gap is a lunch break,
-     * not a technicality.
+     * BR-2 says entirely within <em>one</em> availability window. A caregiver working
+     * 08:00-12:00 and 13:00-17:00 cannot take 11:00-14:00, even though every minute is
+     * nominally covered — the gap is a lunch break, not a technicality.
      */
     @Test
     @DisplayName("BR-2: a window bridging two separate availability blocks is rejected")
@@ -162,7 +160,7 @@ class VisitEligibilityCheckerIT extends AbstractIntegrationTest {
     }
 
     /**
-     * The half-open interval, and the one BR-1 case an off-by-one silently gets wrong. A
+     * The half-open interval, and the one BR-1 case an off-by-one silently gets wrong: a
      * caregiver finishing at 11:30 is free at 11:30.
      */
     @Test
@@ -228,9 +226,8 @@ class VisitEligibilityCheckerIT extends AbstractIntegrationTest {
     }
 
     /**
-     * When several rules fail at once the order has to be deterministic, because the
-     * assignment path turns the first reason into the exception and therefore into the HTTP
-     * status. Declaration order in {@link EligibilityRule} decides it.
+     * When several rules fail at once the order has to be deterministic: the assignment path
+     * turns the first reason into the exception, and therefore into the HTTP status.
      */
     @Test
     @DisplayName("every failure is reported, most specific first")
@@ -249,8 +246,7 @@ class VisitEligibilityCheckerIT extends AbstractIntegrationTest {
 
     /**
      * The eligibility screen and the assignment path must never disagree about a caregiver.
-     * They share an implementation precisely so that this holds; the test is what proves the
-     * delegation was not quietly broken.
+     * They share an implementation so that holds; this proves the delegation is intact.
      */
     @Test
     @DisplayName("the batch path and the single-caregiver path give the same verdict")

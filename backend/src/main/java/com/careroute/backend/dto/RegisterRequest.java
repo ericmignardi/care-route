@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 /**
- * FR-1.1. {@code roles} is carried only so self-registration can reject a request that asks
+ * FR-1.1. {@code roles} is carried only so self-registration can reject a request asking
  * for anything privileged; the granted role is decided by {@code AuthService}, never here.
  */
 public record RegisterRequest(

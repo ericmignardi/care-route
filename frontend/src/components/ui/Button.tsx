@@ -9,17 +9,12 @@ interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "cla
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
-  /** Replaces the label while `loading` — "Assigning…" rather than "Assign visit". */
   loadingLabel?: string;
   icon?: ReactNode;
   fullWidth?: boolean;
   className?: string;
 }
 
-/**
- * Four variants, five states, transcribed from the component sheet. Depth is hairline
- * borders and tonal shifts — there are no drop shadows anywhere in this design.
- */
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: cn(
     "bg-pine border-pine text-pine-on",
@@ -50,7 +45,6 @@ const VARIANTS: Record<ButtonVariant, string> = {
 const SIZES: Record<ButtonSize, string> = {
   sm: "h-[34px] px-[13px] text-[12.5px] rounded-[5px]",
   md: "h-[38px] px-[15px] text-[13px] rounded-[5px]",
-  /** Sized for a gloved thumb on a client's porch in February. */
   lg: "h-[52px] px-5 text-[15px] rounded-[8px]",
 };
 

@@ -37,9 +37,8 @@ export const visit: VisitDetail = {
 };
 
 /**
- * One caregiver of each kind the assign screen has to render: eligible, blocked for a
- * single reason, and blocked for two at once. The third is the one worth having — a
- * caregiver failing several rules is where a naive screen shows only the first.
+ * One caregiver of each kind the assign screen renders: eligible, blocked for one reason,
+ * and blocked for two at once — the third is where a naive screen shows only the first.
  */
 export const candidates: CaregiverEligibility[] = [
   {

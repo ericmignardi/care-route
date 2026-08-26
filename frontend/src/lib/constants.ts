@@ -1,7 +1,4 @@
-/**
- * Enum values mirrored from the backend. These are wire values, so they are transcribed
- * rather than derived — a rename on either side should break the build here.
- */
+/** Wire values mirrored from the backend — a rename on either side should break the build. */
 export const ROLES = ["ROLE_ADMIN", "ROLE_COORDINATOR", "ROLE_CAREGIVER"] as const;
 export type Role = (typeof ROLES)[number];
 
@@ -33,11 +30,7 @@ export const VISIT_STATUSES = [
 ] as const;
 export type VisitStatus = (typeof VISIT_STATUSES)[number];
 
-/**
- * Status is never carried by hue alone. Every rendering pairs the colour with a glyph
- * and a word, because some coordinators are colour-blind and all of them scan these
- * hundreds of times a day.
- */
+/** Status is never carried by hue alone — every rendering pairs the colour with a glyph. */
 export const VISIT_STATUS_META: Record<
   VisitStatus,
   { label: string; short: string; glyph: string; tone: "sch" | "prg" | "don" | "can" | "mis" }

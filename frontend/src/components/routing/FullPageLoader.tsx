@@ -1,6 +1,5 @@
 import { Spinner } from "../ui/Spinner";
 
-/** Held only while GET /auth/me is in flight — a fraction of a second, not a splash screen. */
 export function FullPageLoader({ label = "Loading CareRoute" }: { label?: string }) {
   return (
     <div

@@ -2,11 +2,7 @@ package com.careroute.backend.exception;
 
 import lombok.Getter;
 
-/**
- * Thrown when a request is well-formed but violates a domain rule that leaves the
- * request unprocessable rather than merely conflicting with existing state.
- * Mapped to 422. Carries the rule identifier so the client can branch on it.
- */
+/** A well-formed request that a domain rule leaves unprocessable. Mapped to 422. */
 @Getter
 public class BusinessRuleViolationException extends RuntimeException {
 

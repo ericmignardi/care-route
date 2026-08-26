@@ -14,11 +14,6 @@ import type { VisitDetail } from "../../types/domain";
 
 const NOTE_LIMIT = 2000;
 
-/**
- * The field surface: one visit, three decisions, gloves on. Check in, tick the plan,
- * check out. Every target is at least 44px and the primary action never leaves the
- * bottom of the screen.
- */
 export function MyVisitDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -60,9 +55,8 @@ export function MyVisitDetailPage() {
   const onSite = record.status === "IN_PROGRESS";
 
   /**
-   * Optimistic, with a real rollback. The tick has to answer instantly on a phone with
-   * two bars of signal — but if the request fails the checkbox must go back, or the
-   * caregiver will believe they recorded something they did not.
+   * Optimistic, with a real rollback: if the request fails the checkbox must go back, or
+   * the caregiver believes they recorded something they did not.
    */
   async function completeTask(taskId: string, description: string) {
     const snapshot = record;
@@ -366,9 +360,8 @@ function Steps({ visit }: { visit: VisitDetail }) {
 }
 
 /**
- * Saved as you type, per the design — but debounced and guarded. The endpoint rejects a
- * blank note, so clearing the box is not a save, and a request only goes out once the
- * text has actually settled and differs from what the server already holds.
+ * Saved as you type, debounced and guarded: the endpoint rejects a blank note, so clearing
+ * the box is not a save, and a request goes out only once the text differs from the server's.
  */
 function NoteEditor({
   visit,

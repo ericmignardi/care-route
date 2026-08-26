@@ -15,10 +15,8 @@ import java.util.UUID;
 /**
  * BR-7 — a caregiver may read or act on a visit only if they are its assigned caregiver.
  *
- * <p>This cannot be expressed as a role annotation. "Own only" is a relationship between the
- * authenticated principal and a specific row, which is not knowable until the row is loaded,
- * so it lives here at the service layer instead of in {@code @PreAuthorize}. Role checks
- * still guard the endpoints; this guards the data.
+ * <p>Not expressible as a role annotation: "own only" is a relationship to a specific row,
+ * unknowable until that row is loaded. Roles guard the endpoints; this guards the data.
  */
 @Component
 @RequiredArgsConstructor
@@ -28,9 +26,6 @@ public class VisitAccessGuard {
 
     private final CaregiverRepository caregiverRepository;
 
-    /**
-     * Read access: coordinators and admins see every visit, a caregiver sees only their own.
-     */
     public void requireViewAccess(Visit visit, CustomUserDetails principal) {
         if (hasCoordinationRole(principal)) {
             return;
@@ -39,11 +34,8 @@ public class VisitAccessGuard {
     }
 
     /**
-     * Field actions — check in, check out, complete a task, add a note. Deliberately stricter
-     * than {@link #requireViewAccess}: a coordinator can see a visit but must not be able to
+     * Stricter than {@link #requireViewAccess}: a coordinator can see a visit but must never
      * check into it, because the check-in record is the evidence that someone was there.
-     *
-     * @return the caregiver profile of the authenticated principal
      */
     public Caregiver requireOwnership(Visit visit, CustomUserDetails principal) {
         Caregiver caregiver = requireCaregiverProfile(principal);

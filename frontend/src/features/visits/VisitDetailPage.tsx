@@ -14,10 +14,9 @@ import type { VisitDetail } from "../../types/domain";
 import { AssignCaregiverModal } from "./AssignCaregiverModal";
 
 /**
- * The coordinator's view of one visit. Read-only about the field work — a coordinator can
- * see the tasks and the note but cannot tick them, which is the same line the server
- * draws: `VisitAccessGuard.requireViewAccess` lets them read, `requireOwnership` does not
- * let them check in. Rendering an actionable checkbox here would be a lie the API refuses.
+ * Read-only about the field work, which is the line the server draws:
+ * `VisitAccessGuard.requireViewAccess` lets a coordinator read, `requireOwnership` does not
+ * let them check in. An actionable checkbox here would be a lie the API refuses.
  */
 export function VisitDetailPage() {
   const { id = "" } = useParams();
@@ -259,7 +258,6 @@ function Cell({
   );
 }
 
-/** Scheduled → checked in → checked out, with the steps that have not happened dashed. */
 function Timeline({ visit }: { visit: VisitDetail }) {
   const steps = [
     {

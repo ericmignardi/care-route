@@ -8,11 +8,8 @@ import { navFor } from "../../lib/navigation";
 import { cn } from "../../lib/cn";
 
 /**
- * The `lg:hidden` half of the navigation. Same links, same role gating, drawer chrome.
- *
- * It is a modal layer, so it owes a keyboard what the dialog owes one — the same
- * `useFocusTrap` the modal uses, rather than the lone Esc handler it had before. Without
- * the trap, tabbing out of the drawer walks into a page the drawer is covering.
+ * The `lg:hidden` half of the navigation. It is a modal layer, so it owes a keyboard what
+ * the dialog owes one — without the trap, tabbing out walks into the page underneath.
  */
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const user = useAuthStore((state) => state.user);

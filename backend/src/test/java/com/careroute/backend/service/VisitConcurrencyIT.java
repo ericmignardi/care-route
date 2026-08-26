@@ -15,12 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * BR-8 — two coordinators editing the same visit.
- *
- * <p>The scenario is the realistic one rather than a thread race: both load the visit, both
- * act, and the second acts on a copy that the first has already superseded. {@code @Version}
- * on {@link Visit} is what turns that into a rejection instead of a silently lost update, and
- * a lost update here means a caregiver reading a schedule that nobody intended.
+ * BR-8 — two coordinators editing the same visit. Not a thread race: both load the visit,
+ * both act, and the second acts on a copy the first has already superseded. {@code @Version}
+ * on {@link Visit} turns that into a rejection instead of a silently lost update.
  */
 class VisitConcurrencyIT extends AbstractIntegrationTest {
 

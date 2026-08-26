@@ -6,8 +6,7 @@ import type { CurrentUser, LoginInput } from "../types/auth";
 
 /**
  * "unknown" is the state before the hydration probe returns. The router must not decide
- * anything while it holds — rendering a redirect on a hard refresh, before /auth/me has
- * answered, is what bounces a signed-in user to the login screen.
+ * anything while it holds, or a hard refresh bounces a signed-in user to the login screen.
  */
 export type AuthStatus = "unknown" | "authenticated" | "anonymous";
 
@@ -21,9 +20,8 @@ interface AuthState {
 }
 
 /**
- * Nothing is persisted to localStorage. The session lives entirely in the httpOnly
- * cookie and in memory, so a logout that clears both cannot be undone by the back
- * button restoring a stale store from disk.
+ * Nothing is persisted to localStorage: the session lives in the httpOnly cookie and in
+ * memory, so a logout cannot be undone by the back button restoring a stale store.
  */
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -58,9 +56,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 }));
 
 /**
- * A 401 on any call other than the auth probes means the cookie expired underneath us.
- * Dropping the user out of the store is enough — ProtectedRoute reacts to that and
- * redirects, so no imperative navigation is needed here.
+ * A 401 outside the auth probes means the cookie expired underneath us. Clearing the store
+ * is enough — ProtectedRoute reacts and redirects, so no imperative navigation is needed.
  */
 setUnauthorizedHandler(() => {
   if (useAuthStore.getState().status !== "anonymous") {
@@ -77,7 +74,6 @@ export function isCoordinator(user: CurrentUser | null): boolean {
   return hasAnyRole(user, COORDINATOR_ROLES);
 }
 
-/** Where a user belongs when they land on "/" — the surface their role actually uses. */
 export function landingPath(user: CurrentUser | null): string {
   return isCoordinator(user) ? "/dashboard" : "/my-visits";
 }

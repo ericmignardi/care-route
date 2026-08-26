@@ -46,8 +46,8 @@ export function ClientsPage() {
     `clients ${debouncedSearch} ${status} ${page}`,
   );
 
-  // Any filter change invalidates the page cursor: page 3 of "Ancaster" is not page 3 of
-  // everything, and leaving the cursor alone shows an empty table that looks like a bug.
+  // Any filter change invalidates the page cursor: page 3 of a filtered set is not page 3
+  // of everything, and keeping the cursor shows an empty table that looks like a bug.
   const onFilterChange = useCallback((apply: () => void) => {
     apply();
     setPage(0);

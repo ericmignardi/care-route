@@ -20,20 +20,6 @@ public interface VisitRepository extends JpaRepository<Visit, UUID>, JpaSpecific
 
     @Query("""
             SELECT v FROM Visit v
-            WHERE v.caregiver.id = :caregiverId
-              AND v.status <> com.careroute.backend.model.VisitStatus.CANCELLED
-              AND (:excludedVisitId IS NULL OR v.id <> :excludedVisitId)
-              AND v.scheduledStart < :end
-              AND v.scheduledEnd > :start
-            ORDER BY v.scheduledStart ASC
-            """)
-    List<Visit> findOverlapping(@Param("caregiverId") UUID caregiverId,
-                               @Param("start") LocalDateTime start,
-                               @Param("end") LocalDateTime end,
-                               @Param("excludedVisitId") UUID excludedVisitId);
-
-    @Query("""
-            SELECT v FROM Visit v
             WHERE v.caregiver.id IN :caregiverIds
               AND v.status <> com.careroute.backend.model.VisitStatus.CANCELLED
               AND (:excludedVisitId IS NULL OR v.id <> :excludedVisitId)
@@ -54,8 +40,8 @@ public interface VisitRepository extends JpaRepository<Visit, UUID>, JpaSpecific
     Optional<Visit> findByIdWithTasks(@Param("id") UUID id);
 
     /**
-     * Everything the detail view renders, in one query. The collection join is safe here
-     * because a single row is being loaded, so there is nothing to paginate in memory.
+     * Everything the detail view renders, in one query. The collection join is safe because a
+     * single row is being loaded, so there is nothing to paginate in memory.
      */
     @Query("""
             SELECT v FROM Visit v

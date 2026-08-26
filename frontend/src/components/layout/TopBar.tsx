@@ -6,11 +6,6 @@ import { cn } from "../../lib/cn";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 
-/**
- * The design puts navigation in a 46px top rail rather than a sidebar: a coordinator
- * working a 2160px-wide schedule grid should not surrender 240px of it to chrome.
- * Below `lg` the same links move into the drawer.
- */
 export function TopBar({ onOpenNav, navOpen }: { onOpenNav: () => void; navOpen: boolean }) {
   const user = useAuthStore((state) => state.user);
   const items = navFor(user);

@@ -189,11 +189,9 @@ export function CaregiverDetailPage() {
 }
 
 /**
- * Both editors below hold a working copy of what the server sent. Rather than an effect
- * that overwrites that copy whenever the prop changes — which would also stamp on an edit
- * the user is halfway through — they are keyed on the values they seed from: a save that
- * genuinely changes the record remounts the panel, and a re-render that does not, leaves
- * it alone.
+ * Both editors hold a working copy of what the server sent, keyed on the values they seed
+ * from rather than re-synced by an effect: a save that changes the record remounts the
+ * panel, and a re-render that does not leaves an in-progress edit alone.
  */
 function profileKey(caregiver: CaregiverDetail): string {
   return `${caregiver.status} ${[...caregiver.skills].sort().join(",")}`;
@@ -205,7 +203,6 @@ function availabilityKey(caregiver: CaregiverDetail): string {
     .join("|");
 }
 
-/** Name, phone, status and the skill set — everything `PUT /caregivers/{id}` accepts. */
 function ProfilePanel({
   caregiver,
   onSaved,
@@ -311,10 +308,9 @@ function ProfilePanel({
 }
 
 /**
- * Seven day rows, each holding as many windows as the caregiver actually works — a split
- * shift is a real thing and a one-row-per-day editor would silently delete the second
- * half of it. `PUT` replaces the whole week, so what is on screen is exactly what is
- * stored; there is no partial-update path to get out of step with.
+ * Each day holds as many windows as the caregiver works — a split shift is real, and a
+ * one-row-per-day editor would silently drop its second half. `PUT` replaces the whole
+ * week, so what is on screen is exactly what is stored.
  */
 function AvailabilityPanel({
   caregiver,
@@ -400,9 +396,8 @@ function AvailabilityPanel({
                   const bad = window.endTime <= window.startTime;
                   return (
                     <div key={index} className="flex flex-wrap items-center gap-2">
-                      {/* The control fills its wrapper rather than overriding its own
-                          `w-full` — `cn` is a plain join, so a competing width would not
-                          have won. The wrapper is where a fixed size belongs. */}
+                      {/* Fixed sizes belong on the wrapper: `cn` is a plain join, so a
+                          width passed to the control would not beat its own `w-full`. */}
                       <span className="w-[116px]">
                         <input
                           type="time"

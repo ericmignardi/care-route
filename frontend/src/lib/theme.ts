@@ -3,8 +3,8 @@ import { THEME_STORAGE_KEY } from "./constants";
 export type Theme = "light" | "dark";
 
 /**
- * Mirrors the inline script in index.html, which resolves the theme before first paint
- * so a caregiver opening the app at 05:30 never sees a flash of the light palette.
+ * Mirrors the inline script in index.html, which resolves the theme before first paint so
+ * there is no flash of the light palette. Both must stay in step.
  */
 export function readStoredTheme(): Theme {
   try {

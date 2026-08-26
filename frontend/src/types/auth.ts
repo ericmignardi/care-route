@@ -1,12 +1,8 @@
 import { z } from "zod";
 
 /**
- * Zod schemas are the single source of truth for the auth forms: the TypeScript types
- * below are derived with z.infer rather than declared alongside, so a schema change
- * cannot leave a stale type behind.
- *
- * Constraints mirror the backend DTOs (LoginRequest, RegisterRequest) — the server
- * still validates, this just refuses the round trip.
+ * Constraints mirror the backend DTOs — the server still validates, this only refuses the
+ * round trip. Types are derived with z.infer so a schema change cannot leave a stale one.
  */
 export const loginSchema = z.object({
   username: z.string().trim().min(1, "Enter your username"),
@@ -33,7 +29,6 @@ export const registerSchema = z
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-/** GET /auth/me. `caregiverId` is non-null only for accounts with a caregiver profile. */
 export interface CurrentUser {
   userId: string;
   username: string;

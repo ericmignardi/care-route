@@ -8,11 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-/**
- * FR-3.4. Ineligible caregivers are returned rather than filtered out: the coordinator's
- * question is "who can take this, and why not the others?", and hiding the others answers
- * only half of it.
- */
+/** FR-3.4. Ineligible caregivers are returned, not filtered out, each carrying its reasons. */
 public record CaregiverEligibilityResponse(
         UUID caregiverId,
         String firstName,

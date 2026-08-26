@@ -4,19 +4,14 @@ const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 interface FocusTrapOptions {
-  /** Locks background scrolling while the layer is up. Off for a drawer that is not full height. */
   lockScroll?: boolean;
 }
 
 /**
- * Everything an overlay owes a keyboard: Esc dismisses it, Tab cycles inside it rather
- * than wandering into the page underneath, focus lands on the first control when it opens,
- * and it returns to whatever opened it when it closes.
- *
- * Shared by the modal and the mobile navigation drawer. It lives in one place because the
- * second implementation of a focus trap is always the one that quietly forgets to restore
- * focus — which strands a keyboard user at the top of the document with no way back to the
- * button they pressed.
+ * Everything an overlay owes a keyboard: Esc dismisses, Tab cycles inside rather than
+ * wandering into the page underneath, focus lands on the first control and returns to
+ * whatever opened it. Shared by the modal and the drawer so there is only one of them to
+ * get right — the duplicate is always the one that forgets to restore focus.
  */
 export function useFocusTrap(
   active: boolean,

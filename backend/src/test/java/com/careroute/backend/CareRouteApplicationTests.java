@@ -7,9 +7,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The context loads, the Flyway migrations apply, and Hibernate validates the entity mappings
- * against the schema those migrations produced. That last part is the one worth having: a
- * mapping that has drifted from a migration fails here rather than on deployment day.
+ * The context loads, Flyway migrates, and Hibernate validates the mappings against the
+ * schema those migrations produced — so a mapping that has drifted fails here.
  */
 class CareRouteApplicationTests extends AbstractIntegrationTest {
 

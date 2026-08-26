@@ -22,9 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Authorization over HTTP, through the real filter chain and real JWTs.
  *
- * <p>BR-7 is the reason this class exists. "Own only" cannot be expressed as a role, so it is
- * enforced after the row is loaded — which means the only way to know it holds is to ask the
- * API as one caregiver for another caregiver's visit.
+ * <p>BR-7 is why this class exists: "own only" cannot be expressed as a role, so it is
+ * enforced after the row is loaded — and the only way to know it holds is to ask the API as
+ * one caregiver for another caregiver's visit.
  */
 class VisitApiSecurityIT extends AbstractIntegrationTest {
 
@@ -140,9 +140,8 @@ class VisitApiSecurityIT extends AbstractIntegrationTest {
     }
 
     /**
-     * The distinction the role table draws and a single access check would have erased: a
-     * coordinator may see any visit, but check-in is the caregiver's evidence that they were
-     * in the client's home, so nobody else can produce it.
+     * A coordinator may see any visit, but check-in is the caregiver's evidence that they
+     * were in the client's home, so nobody else can produce it.
      */
     @Test
     @DisplayName("BR-7: a coordinator can read any visit but cannot check into one")

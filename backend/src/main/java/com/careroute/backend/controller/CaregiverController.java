@@ -29,10 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * FR-3.x. The default sort is by surname because that is how a coordinator scanning a roster
- * looks for someone.
- */
+/** FR-3.x. */
 @RestController
 @RequestMapping("/api/v1/caregivers")
 @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")

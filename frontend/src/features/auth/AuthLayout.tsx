@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import { ThemeToggle } from "../../components/layout/ThemeToggle";
 
-/**
- * The signed-out surface. Same bone-and-pine palette as everything behind it, so the
- * login screen reads as the front door of the product rather than a separate app.
- */
 export function AuthLayout({
   title,
   intro,

@@ -29,14 +29,12 @@ function matches(caregiver: CaregiverEligibility, filter: string): boolean {
 }
 
 /**
- * The product's signature screen. Every caregiver the server evaluated is here, eligible
- * or not — the ineligible ones stay at full contrast with their reason in a fixed column,
- * because the reason is usually the thing the coordinator can actually change. Hiding
- * them would turn a diagnosis into a shrug.
+ * Every caregiver the server evaluated is here, eligible or not, because the reason is
+ * usually the thing the coordinator can change.
  *
- * The rules are never re-evaluated in the browser. `reasons` is what the same
+ * The rules are never re-evaluated in the browser: `reasons` is what the same
  * VisitEligibilityChecker that guards the assignment endpoint concluded, so what this
- * screen shows and what the server will permit cannot drift.
+ * screen shows and what the server permits cannot drift.
  */
 export function AssignCaregiverModal({
   open,

@@ -4,11 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * The half-open interval {@code [start, end)} a visit occupies.
- *
- * <p>Half-open is the whole point: a visit ending at 10:00 and one starting at 10:00
- * do not overlap (BR-1). Modelling the window as a value object keeps that decision
- * in one place instead of scattered across every comparison.
+ * The half-open interval {@code [start, end)} a visit occupies. Half-open is the point: a
+ * visit ending at 10:00 and one starting at 10:00 do not overlap (BR-1).
  */
 public record VisitWindow(LocalDateTime start, LocalDateTime end) {
 

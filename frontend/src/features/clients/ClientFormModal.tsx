@@ -18,11 +18,7 @@ const EMPTY: ClientFormValues = {
   status: "ACTIVE",
 };
 
-/**
- * One modal for create and edit. `client` being present is the only difference, and the
- * two flows share every field and every validation rule — splitting them would be two
- * files that have to be kept identical.
- */
+/** One modal for create and edit; `client` being present is the only difference. */
 export function ClientFormModal({
   open,
   client,

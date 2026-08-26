@@ -3,9 +3,8 @@ import { useAuthStore } from "../../stores/authStore";
 import { FullPageLoader } from "./FullPageLoader";
 
 /**
- * The `unknown` branch is what makes a hard refresh keep the session: without it the
- * router would decide the user is signed out in the frame before /auth/me answers, and
- * bounce them to the login screen they were already past.
+ * The `unknown` branch is what makes a hard refresh keep the session: without it the router
+ * decides the user is signed out in the frame before /auth/me answers.
  */
 export function ProtectedRoute() {
   const status = useAuthStore((state) => state.status);

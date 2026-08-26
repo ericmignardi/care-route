@@ -2,10 +2,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./Button";
 import type { PageResponse } from "../../types/api";
 
-/**
- * Reads straight off the page envelope, so the control cannot disagree with the data —
- * `first` and `last` are the server's opinion, not a recomputation from page and total.
- */
 export function Pagination<T>({
   page,
   onPageChange,

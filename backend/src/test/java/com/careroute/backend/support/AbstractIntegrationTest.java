@@ -42,15 +42,13 @@ import java.util.Set;
 /**
  * The shared Testcontainers Postgres every integration test runs against.
  *
- * <p>The container is a JVM-wide singleton started in a static initialiser rather than a
- * per-class {@code @Container}: every subclass declares the same context configuration, so
- * Spring caches one application context and Docker starts one database for the whole suite.
- * Running against real Postgres rather than an in-memory substitute matters here, because the
- * schema under test is Flyway-managed and Hibernate validates the mappings against it. A
- * substitute would only prove the entities agree with a schema that is never deployed.
+ * <p>A JVM-wide singleton in a static initialiser rather than a per-class {@code @Container}:
+ * every subclass declares the same context configuration, so Spring caches one context and
+ * Docker starts one database for the whole suite. Real Postgres rather than a substitute,
+ * because the schema is Flyway-managed and Hibernate validates the mappings against it.
  *
- * <p>Every test starts from an empty domain. The {@code roles} table is deliberately spared:
- * it is reference data owned by {@code V3__seed_roles.sql}, not test fixture.
+ * <p>Every test starts from an empty domain. {@code roles} is spared: it is reference data
+ * owned by {@code V3__seed_roles.sql}, not fixture.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -99,7 +97,6 @@ public abstract class AbstractIntegrationTest {
 
     // --- time helpers -------------------------------------------------------
 
-    /** A wall-clock time on the fixture day. */
     protected static LocalDateTime at(int hour, int minute) {
         return DAY.atTime(hour, minute);
     }
@@ -122,10 +119,7 @@ public abstract class AbstractIntegrationTest {
         return userRepository.save(user);
     }
 
-    /**
-     * A caregiver available 08:00 to 16:00 on the fixture day, holding the given skills. Tests
-     * that need a different shape override one piece rather than rebuilding the graph.
-     */
+    /** A caregiver available 08:00 to 16:00 on the fixture day, holding the given skills. */
     protected Caregiver persistCaregiver(String username, Skill... skills) {
         return persistCaregiver(username, LocalTime.of(8, 0), LocalTime.of(16, 0), skills);
     }

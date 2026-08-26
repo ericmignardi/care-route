@@ -16,19 +16,16 @@ public interface CaregiverRepository extends JpaRepository<Caregiver, UUID>, Jpa
 
     Optional<Caregiver> findByUserId(UUID userId);
 
-    Optional<Caregiver> findByUserUsername(String username);
-
     /**
-     * The candidate pool for {@code /visits/eligible-caregivers}. Unpaginated by design —
-     * the screen shows every caregiver, eligible or not — so fetching the skills collection
-     * here costs one join rather than forcing in-memory pagination.
+     * The candidate pool for {@code /visits/eligible-caregivers}. Unpaginated by design, so
+     * fetching skills here costs one join rather than forcing in-memory pagination.
      */
     @EntityGraph(attributePaths = {"user", "skills"})
     List<Caregiver> findAllByStatus(CaregiverStatus status);
 
     /**
-     * Skills and availability are left to batch fetching rather than joined here: two
-     * collection joins in one query multiply the rows against each other.
+     * Skills and availability are left to batch fetching: two collection joins in one query
+     * multiply the rows against each other.
      */
     @Query("SELECT c FROM Caregiver c JOIN FETCH c.user WHERE c.id = :id")
     Optional<Caregiver> findByIdWithUser(@Param("id") UUID id);

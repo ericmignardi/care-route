@@ -11,10 +11,9 @@ import java.net.URI;
 import java.time.Instant;
 
 /**
- * Serialises a {@link ProblemDetail} straight onto the servlet response. Needed because
- * Spring Security's filter-chain handlers run outside the {@code @RestControllerAdvice},
- * and error shapes that differ between the filter chain and the controllers are exactly
- * the kind of inconsistency a client has to write two code paths for.
+ * Serialises a {@link ProblemDetail} straight onto the servlet response. Spring Security's
+ * filter-chain handlers run outside the {@code @RestControllerAdvice}, so without this the
+ * filter chain and the controllers would return different error shapes.
  */
 final class ProblemDetailWriter {
 

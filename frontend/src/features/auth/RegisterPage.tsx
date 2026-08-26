@@ -11,9 +11,8 @@ import { registerSchema, type RegisterInput } from "../../types/auth";
 import { AuthLayout } from "./AuthLayout";
 
 /**
- * Self-registration grants ROLE_CAREGIVER and nothing else — the backend rejects any
- * request asking for more — so the form does not offer a role picker. Coordinator and
- * admin accounts are created by an admin.
+ * Self-registration grants ROLE_CAREGIVER and nothing else — the backend rejects anything
+ * more — so the form offers no role picker.
  */
 export function RegisterPage() {
   const navigate = useNavigate();

@@ -24,11 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * The scheduling rules as the API enforces them, including which failures are conflicts with
- * existing state (409) and which are unprocessable requests (422).
+ * The scheduling rules as the API enforces them, including which failures are conflicts
+ * (409) and which are unprocessable (422).
  *
- * <p>Deliberately not transactional: these tests commit, so a rule that only holds because a
- * change was never flushed would fail here.
+ * <p>Deliberately not transactional: these tests commit, so a rule that only holds because
+ * a change was never flushed fails here.
  */
 class VisitSchedulingServiceIT extends AbstractIntegrationTest {
 
@@ -199,8 +199,8 @@ class VisitSchedulingServiceIT extends AbstractIntegrationTest {
     // --- FR-3.4 -------------------------------------------------------------
 
     /**
-     * The signature interaction: ineligible caregivers come back with the reason attached, so
-     * the assign dialog can dim a name and say why rather than silently omitting it.
+     * Ineligible caregivers come back with the reason attached, so the assign dialog can dim
+     * a name and say why rather than silently omitting it.
      */
     @Test
     @DisplayName("FR-3.4: eligible caregivers are listed alongside the ineligible ones and their reasons")

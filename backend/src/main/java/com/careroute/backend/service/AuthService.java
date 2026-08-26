@@ -24,10 +24,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthService {
 
-    /**
-     * The only role a caller may grant themselves. Coordinator and admin accounts are created
-     * by an existing admin, never by the applicant.
-     */
+    /** The only role a caller may grant themselves. */
     private static final String SELF_ASSIGNABLE_ROLE = "ROLE_CAREGIVER";
 
     private final AuthenticationManager authenticationManager;

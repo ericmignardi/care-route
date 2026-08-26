@@ -17,13 +17,11 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * FR-6.1 to FR-6.3. The dashboard is the one screen whose entire content is arithmetic over
- * the database, so its exit criterion — "dashboard numbers match the database" — is a thing
- * to assert rather than to eyeball against a seeded environment.
+ * FR-6.1 to FR-6.3. The dashboard is entirely arithmetic over the database, so "the numbers
+ * match the database" is something to assert rather than eyeball.
  *
- * <p>The week chart is the part worth testing hardest. Its two segments are drawn stacked,
- * which only reads correctly if they sum to the total; a chart whose parts do not add up to
- * its own label is worse than no chart, because it is quietly wrong rather than absent.
+ * <p>The week chart matters most: its two segments are drawn stacked, so they only read
+ * correctly if they sum to the total printed above the bar.
  */
 class DashboardServiceIT extends AbstractIntegrationTest {
 

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * Mirrors `ClientRequest` on the server, including its `@Size` caps. The server still
- * validates — this just refuses the round trip and puts the message next to the field.
+ * validates; this only refuses the round trip.
  */
 export const clientSchema = z.object({
   firstName: z.string().trim().min(1, "Enter a first name").max(100, "100 characters at most"),

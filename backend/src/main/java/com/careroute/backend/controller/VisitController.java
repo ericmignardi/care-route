@@ -36,11 +36,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * The visit surface, split by who is allowed to reach it.
- *
- * <p>Coordination endpoints carry a role annotation. The per-visit endpoints do not, because
- * "the caregiver this visit is assigned to" is not a role — it is a relationship to a specific
- * row, checked in the service layer once the row is loaded (BR-7).
+ * Coordination endpoints carry a role annotation. The per-visit endpoints do not: "the
+ * caregiver this visit is assigned to" is not a role but a relationship to a specific row,
+ * so it is checked in the service layer once the row is loaded (BR-7).
  */
 @RestController
 @RequestMapping("/api/v1/visits")
@@ -70,7 +68,7 @@ public class VisitController {
         return ResponseEntity.status(HttpStatus.CREATED).body(schedulingService.schedule(request));
     }
 
-    /** FR-3.4 — the answer to "who can take this, and why not the others?". */
+    /** FR-3.4. */
     @GetMapping("/eligible-caregivers")
     @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")
     public List<CaregiverEligibilityResponse> eligibleCaregivers(
@@ -81,7 +79,7 @@ public class VisitController {
         return schedulingService.findEligibleCaregivers(start, end, requiredSkill, visitId);
     }
 
-    /** FR-5.1. Defaults to today. */
+    /** FR-5.1. */
     @GetMapping("/my")
     public List<VisitResponse> myVisits(
             @AuthenticationPrincipal CustomUserDetails principal,

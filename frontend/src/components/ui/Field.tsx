@@ -3,7 +3,6 @@ import { cn } from "../../lib/cn";
 
 export interface FieldProps {
   label: string;
-  /** The sentence under the field. Turns clay and bolder when `error` is set. */
   hint?: string;
   error?: string;
   required?: boolean;
@@ -16,10 +15,7 @@ export interface FieldProps {
   className?: string;
 }
 
-/**
- * Owns the label / hint / error wiring so every control is labelled and every error is
- * announced — NFR-9 is not something to retrofit onto twenty forms later.
- */
+/** NFR-9. Owns the label / hint / error wiring so every control is labelled and announced. */
 export function Field({
   label,
   hint,

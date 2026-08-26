@@ -27,8 +27,8 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    public static final String BEARER_PREFIX = "Bearer ";
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
@@ -60,12 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (ExpiredJwtException | MalformedJwtException | SignatureException | UnsupportedJwtException
                  | IllegalArgumentException | UsernameNotFoundException e) {
-            // A token that cannot be resolved leaves the request anonymous and continues down
-            // the chain — it must never abort it. UsernameNotFoundException is the case that
-            // matters most: a well-formed, correctly signed, unexpired token naming a user who
-            // no longer exists (deleted account, restored database). Letting it escape the
-            // filter turned every request into a 401 *including* POST /auth/login, so the
-            // holder of a stale cookie could not sign back in without clearing it by hand.
+            // An unresolvable token leaves the request anonymous and continues down the chain;
+            // it must never abort it. UsernameNotFoundException is the case that matters: a
+            // valid, unexpired token naming a user who no longer exists. Letting it escape
+            // turned every request into a 401 including POST /auth/login, so the holder of a
+            // stale cookie could not sign back in without clearing it by hand.
             log.debug("JWT authentication failed, continuing anonymously: {}", e.getMessage());
         }
 
@@ -73,7 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String extractJwt(HttpServletRequest request) {
-        // 1. Try to extract from HttpOnly cookie
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {
@@ -82,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2. Fallback to Authorization Header (optional but helpful for API testing)
+        // The header fallback exists for API testing; the browser always uses the cookie.
         String authHeader = request.getHeader(AUTHORIZATION_HEADER);
         if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
             return authHeader.substring(BEARER_PREFIX.length());

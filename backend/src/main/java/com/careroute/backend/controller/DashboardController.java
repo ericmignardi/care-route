@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * FR-6.x.
- */
+/** FR-6.x. */
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATOR')")

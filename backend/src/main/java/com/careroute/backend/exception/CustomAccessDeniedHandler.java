@@ -11,10 +11,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-/**
- * Emits the same {@code application/problem+json} shape as {@link GlobalExceptionHandler}
- * for authorization failures raised inside the filter chain.
- */
 @Component
 @AllArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {

@@ -1,11 +1,9 @@
 import type { DayOfWeek, Skill, VisitStatus } from "../lib/constants";
 
 /**
- * The wire shapes returned by the backend, transcribed from the DTO records rather than
- * inferred. `LocalDateTime` fields arrive as unzoned ISO strings ("2026-08-25T11:30:00")
- * and `Instant` fields as UTC ("2026-08-25T15:34:12.481Z") — the distinction matters,
- * because a scheduled window is a wall-clock fact about Ancaster and a check-in stamp is
- * a moment in time. `lib/dates` is where that gets resolved; nothing else should parse.
+ * The wire shapes returned by the backend. `LocalDateTime` fields arrive as unzoned ISO
+ * strings and `Instant` fields as UTC — a scheduled window is a wall-clock fact, a check-in
+ * stamp is a moment in time. `lib/dates` resolves that; nothing else should parse.
  */
 
 export type ClientStatus = "ACTIVE" | "INACTIVE";
@@ -64,7 +62,6 @@ export interface Availability {
   endTime: string;
 }
 
-/** A window being edited, before it has been saved and given an id. */
 export interface AvailabilityInput {
   dayOfWeek: DayOfWeek;
   startTime: string;
@@ -140,9 +137,8 @@ export interface ScheduleVisitRequest {
 }
 
 /**
- * BR-1 through BR-3, as the server evaluated them. Declaration order in the backend enum
- * is the priority order, and the server has already sorted `reasons` by it — so
- * `reasons[0]` is the thing worth showing when there is only room for one.
+ * BR-1 through BR-3, as the server evaluated them. The server has already sorted `reasons`
+ * by rule priority, so `reasons[0]` is the one worth showing when there is room for one.
  */
 export type EligibilityRule =
   | "CAREGIVER_INACTIVE"
@@ -164,11 +160,6 @@ export interface CaregiverEligibility {
   reasons: EligibilityReason[];
 }
 
-/**
- * One bar of the dashboard week chart. The two segments the chart stacks are the
- * assigned remainder and the unassigned share, so they sum to the total above the bar
- * rather than being independent measures of it.
- */
 export interface DayCount {
   date: string;
   total: number;
@@ -185,11 +176,6 @@ export interface DashboardSummary {
   unassignedUpcomingVisits: Visit[];
 }
 
-/**
- * The short mono tag the assign screen puts in front of every refusal. The design gives
- * the category its own column so the eye can group eleven blocked caregivers at a glance
- * without reading eleven sentences.
- */
 export const ELIGIBILITY_RULE_TAGS: Record<EligibilityRule, string> = {
   CAREGIVER_INACTIVE: "INACTIVE",
   CAREGIVER_MISSING_SKILL: "QUALIFICATION",

@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Filters behind {@code GET /caregivers} (FR-3.1). The caregiver's name lives on the linked
- * user, so searching by name means joining it; the same join is promoted to a fetch on the
- * data query so a page of caregivers does not fire a user query per row (NFR-6).
+ * Filters behind {@code GET /caregivers} (FR-3.1). The name lives on the linked user, so
+ * searching by name means joining it; that join is promoted to a fetch on the data query so
+ * a page of caregivers does not fire a user query per row (NFR-6).
  */
 public final class CaregiverSpecifications {
 

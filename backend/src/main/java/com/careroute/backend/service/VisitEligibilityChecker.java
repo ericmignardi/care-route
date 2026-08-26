@@ -30,18 +30,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * The single implementation of eligibility: BR-1 (no overlapping visit), BR-2 (inside
- * the caregiver's availability for that day) and BR-3 (holds the required skill).
+ * The single implementation of eligibility: BR-1 (no overlapping visit), BR-2 (inside the
+ * caregiver's availability for that day) and BR-3 (holds the required skill).
  *
- * <p>Two consumers, one predicate. {@link VisitSchedulingService} calls it to reject an
- * invalid assignment; the {@code /visits/eligible-caregivers} endpoint calls it to explain
- * why each caregiver can or cannot take a slot. Duplicating either rule elsewhere would let
- * the two answers drift apart, which is the failure mode this class exists to prevent.
+ * <p>Two consumers, one predicate: {@link VisitSchedulingService} rejects invalid
+ * assignments with it, and {@code /visits/eligible-caregivers} explains refusals with it.
+ * Duplicating a rule elsewhere is what would let the two answers drift apart.
  *
  * <p>{@link #evaluate} is the real implementation and the single-caregiver form delegates to
- * it, so the batch path used by the eligibility screen issues two queries regardless of how
- * many caregivers are being considered (NFR-6), and the overlap check stays a single indexed
- * query rather than in-memory filtering (NFR-5).
+ * it, so the batch path issues two queries however many caregivers are considered (NFR-6),
+ * and the overlap check stays one indexed query rather than in-memory filtering (NFR-5).
  */
 @Component
 @RequiredArgsConstructor
@@ -62,11 +60,7 @@ public class VisitEligibilityChecker {
                 .getOrDefault(caregiver.getId(), EligibilityResult.ELIGIBLE);
     }
 
-    /**
-     * Evaluates every caregiver against the same window in a fixed number of queries.
-     *
-     * @return verdicts keyed by caregiver id, in the iteration order of the input
-     */
+    /** Evaluates every caregiver against the same window in a fixed number of queries. */
     public Map<UUID, EligibilityResult> evaluate(Collection<Caregiver> caregivers, VisitWindow window,
                                                  Skill requiredSkill, UUID excludedVisitId) {
         if (caregivers.isEmpty()) {
@@ -112,8 +106,8 @@ public class VisitEligibilityChecker {
     }
 
     /**
-     * BR-2. The window must fall entirely inside one availability window for that day, so a
-     * visit spanning midnight can never qualify no matter how the day is covered.
+     * BR-2. The window must fall entirely inside a single availability window for that day,
+     * so a visit spanning midnight can never qualify however the day is covered.
      */
     private Optional<EligibilityReason> availabilityReason(VisitWindow window, DayOfWeek dayOfWeek,
                                                            List<Availability> windows) {

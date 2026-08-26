@@ -33,9 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * FR-3.x and FR-1.4.
- */
+/** FR-3.x and FR-1.4. */
 @Service
 @RequiredArgsConstructor
 public class CaregiverService {
@@ -59,11 +57,7 @@ public class CaregiverService {
         return CaregiverDetailResponse.from(load(id));
     }
 
-    /**
-     * FR-1.4. Creates the login and the profile together and links them, because neither is
-     * useful alone: a profile without an account cannot check in, and an account without a
-     * profile cannot be assigned a visit.
-     */
+    /** FR-1.4. Login and profile are created and linked together; neither is useful alone. */
     @Transactional
     public CaregiverDetailResponse create(CreateCaregiverRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -117,8 +111,7 @@ public class CaregiverService {
 
     /**
      * FR-3.3. Replaces the whole week in one call. Overlapping windows on the same day are
-     * rejected rather than merged: two windows that overlap mean the coordinator made a
-     * mistake, and silently merging them hides it.
+     * rejected rather than merged, because an overlap means the coordinator made a mistake.
      */
     @Transactional
     public List<AvailabilityResponse> replaceAvailability(UUID caregiverId, AvailabilityReplaceRequest request) {
@@ -126,10 +119,9 @@ public class CaregiverService {
         validateWindows(request.windows());
 
         caregiver.getAvailability().clear();
-        // The flush is load-bearing. Hibernate's action queue runs inserts before
-        // orphan-removal deletes, so re-submitting an unchanged week made the new
-        // MONDAY 08:00 row collide with the old one on uq_availability_slot. Flushing
-        // the deletes first means "replace the week" behaves like a replace.
+        // The flush is load-bearing: Hibernate's action queue runs inserts before
+        // orphan-removal deletes, so re-submitting an unchanged week collides with the old
+        // rows on uq_availability_slot unless the deletes are flushed first.
         caregiverRepository.saveAndFlush(caregiver);
 
         request.windows().stream()

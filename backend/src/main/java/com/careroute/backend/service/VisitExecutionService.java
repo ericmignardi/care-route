@@ -23,9 +23,8 @@ import java.util.UUID;
  * Field operations performed by the caregiver who owns the visit: check-in (BR-4),
  * check-out (BR-5), task completion and notes.
  *
- * <p>Every method here re-establishes ownership through {@link VisitAccessGuard} rather than
- * trusting the id in the URL. The three-line cost of that is what makes BR-7 true rather than
- * merely intended.
+ * <p>Every method re-establishes ownership through {@link VisitAccessGuard} rather than
+ * trusting the id in the URL — that is what makes BR-7 true rather than merely intended.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,9 +38,8 @@ public class VisitExecutionService {
     private final Clock clock;
 
     /**
-     * BR-4. Permitted only on a SCHEDULED visit and only within the configured tolerance of
-     * the scheduled start, in either direction — arriving two hours early is as much a data
-     * error as arriving two hours late.
+     * BR-4. Only on a SCHEDULED visit, and only within the configured tolerance of the
+     * scheduled start in either direction — two hours early is as wrong as two hours late.
      */
     @Transactional
     public VisitDetailResponse checkIn(UUID visitId, CustomUserDetails principal) {
@@ -82,8 +80,8 @@ public class VisitExecutionService {
     }
 
     /**
-     * FR-5.3. Tasks are completed during the visit, so the visit must be in progress: a task
-     * ticked before check-in or after check-out is not evidence of anything.
+     * FR-5.3. The visit must be in progress — a task ticked before check-in or after
+     * check-out is not evidence of anything.
      */
     @Transactional
     public VisitDetailResponse completeTask(UUID visitId, UUID taskId, CustomUserDetails principal) {
