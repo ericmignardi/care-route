@@ -1,8 +1,8 @@
 # CareRoute — Product Requirements Document
 
-**Status:** Draft v1.0
+**Status:** v1.1 — sections 4, 8, 10 and 11 reconciled against the implementation
 **Author:** Eric Mignardi
-**Last updated:** 2026-08-21
+**Last updated:** 2026-08-26
 
 ---
 
@@ -77,7 +77,7 @@ The client (care recipient) is a subject of the system, not a user. There is no 
 |---|:---:|:---:|:---:|
 | Manage clients and care plans | Yes | Yes | No |
 | View all caregivers | Yes | Yes | No |
-| Manage caregiver availability | Yes | Yes | own only |
+| Manage caregiver availability | Yes | Yes | No |
 | Create / assign / cancel visits | Yes | Yes | No |
 | View all visits | Yes | Yes | No |
 | View own visits | Yes | Yes | Yes |
@@ -87,6 +87,10 @@ The client (care recipient) is a subject of the system, not a user. There is no 
 | Coordinator dashboard | Yes | Yes | No |
 
 **Note on "own only":** this is an ownership constraint, not a role constraint. Role annotations cannot express it, so it requires a service-layer authorization check comparing the authenticated principal against the visit's assigned caregiver. This distinction is a deliberate part of the design.
+
+**Note on availability:** editing it is a coordinator function only (FR-3.3). A caregiver can see their own schedule but cannot change the windows they are bookable in, which matches how agencies actually operate — availability is agreed, not self-declared.
+
+**Note on "view own visits":** admins and coordinators satisfy that row through "view all visits". `GET /visits/my` resolves the caller's caregiver *profile*, so it answers only for accounts that have one.
 
 ---
 
@@ -172,7 +176,7 @@ These are the functional core of the product. Each is enforced server-side and e
 | FR-1.1 | A user can register and log in; the JWT is issued in an httpOnly cookie | Must (built) |
 | FR-1.2 | A user can log out, clearing the cookie | Must (built) |
 | FR-1.3 | The current user's identity and roles are retrievable via `GET /api/v1/auth/me` | Must |
-| FR-1.4 | An admin can create a caregiver account linked to a caregiver profile | Should |
+| FR-1.4 | An admin or coordinator can create a caregiver account linked to a caregiver profile, in one call | Should |
 
 ### 7.2 Clients
 
@@ -203,6 +207,8 @@ These are the functional core of the product. Each is enforced server-side and e
 | FR-4.5 | A schedule board shows a day or week grouped by caregiver | Must |
 | FR-4.6 | Creating a visit copies the client's care plan tasks into visit tasks | Must |
 | FR-4.7 | A visit detail view shows status, timeline, tasks, and notes | Must |
+
+FR-4.5 shipped as the day view only; the week view was descoped in advance (PLAN section 8, cut #1). FR-4.7 is served by two screens rather than one — a role-gated coordinator read at `/visits/{id}` and the caregiver's own field surface — because a coordinator may read a visit's checklist but may not tick it.
 
 ### 7.5 Field operations (caregiver)
 
@@ -252,8 +258,11 @@ Base path `/api/v1`. All responses are JSON. Errors use RFC 7807 `application/pr
 | POST | `/visits/{id}/check-in` | owning CAREGIVER | BR-4 |
 | POST | `/visits/{id}/check-out` | owning CAREGIVER | BR-5 |
 | POST | `/visits/{id}/tasks/{taskId}/complete` | owning CAREGIVER | Complete task |
+| POST | `/visits/{id}/notes` | owning CAREGIVER | Add a visit note (FR-5.4) |
 | GET | `/visits/my` | CAREGIVER | Own visits |
 | GET | `/dashboard/summary` | COORD | KPI aggregate |
+
+`COORD` above is satisfied by `ROLE_COORDINATOR` or `ROLE_ADMIN`. `/auth/register` is public but self-service only: it grants `ROLE_CAREGIVER` and refuses a request naming any other role with `422 ROLE_NOT_SELF_ASSIGNABLE`, so no unauthenticated caller can mint a privileged account. Coordinator and admin accounts come from the seed; caregiver profiles come from `POST /caregivers`.
 
 ---
 
@@ -278,28 +287,30 @@ Base path `/api/v1`. All responses are JSON. Errors use RFC 7807 `application/pr
 
 ## 10. Known constraints discovered during design
 
-Verified against the existing codebase and carried into the plan.
+Verified against the codebase during design, and all six settled in Phase 0. Each carries its outcome below rather than being deleted, since the reasoning is the part worth keeping.
 
-1. **Cross-site cookie.** The JWT cookie is issued `SameSite=Lax` in `AuthController`. Once the frontend and backend are on different Azure domains, the browser will not send it. Production requires `SameSite=None; Secure`, which in turn requires HTTPS on both. This must be environment-driven, not hardcoded.
-2. **Hardcoded CORS origin.** `CorsConfig` allows only `http://localhost:5173`. The allowed origin list must move to configuration before deployment.
-3. **Prod compose build context.** ~~`docker-compose.prod.yml` sets `build.context: backend`, but the `Dockerfile` sat at the repository root and copied `backend/pom.xml`.~~ **Resolved:** the `Dockerfile` now lives in `backend/`, matching the context the compose file already declared. Its `COPY` paths are relative to `backend/`.
-4. **`PATCH` not in the CORS allow-list.** Either add it, or model all state transitions as `POST` actions. This PRD assumes `POST` actions.
-5. **springdoc under Spring Boot 4.** The artifact resolves from Maven Central, but the springdoc 2.x line targets Boot 3.x; runtime compatibility is unverified. Treat API documentation as a nice-to-have with a documented fallback.
-6. **Placeholder scaffolding.** `DataService` and four demo endpoints on `AuthController` exist to prove out method security. They are to be removed before the project is presented.
+1. **Cross-site cookie.** The JWT cookie was issued `SameSite=Lax` in `AuthController`. Once the frontend and backend sit on different Azure domains the browser will not send it; production requires `SameSite=None; Secure`, which in turn requires HTTPS on both. **Resolved:** both flags are environment-driven (`JWT_COOKIE_SAME_SITE`, `JWT_COOKIE_SECURE`) on `JwtProperties`, and the behaviour was verified by booting with `SameSite=None`, not merely by reading the property back.
+2. **Hardcoded CORS origin.** `CorsConfig` allowed only `http://localhost:5173`. **Resolved:** the origin list is `app.cors.allowed-origins`, bound as a `List<String>` so `APP_CORS_ALLOWED_ORIGINS` accepts a comma-separated value. Nothing is hardcoded as a fallback; the backend imports the repository-root `.env` at startup so local development still works from one file.
+3. **Prod compose build context.** `docker-compose.prod.yml` set `build.context: backend`, but the `Dockerfile` sat at the repository root and copied `backend/pom.xml`. **Resolved:** the `Dockerfile` now lives in `backend/`, matching the context the compose file already declared, and its `COPY` paths are relative to `backend/`.
+4. **`PATCH` not in the CORS allow-list.** Either add it, or model all state transitions as `POST` actions. **Resolved as designed:** every transition in section 8 is a `POST` action, so `PATCH` is never issued.
+5. **springdoc under Spring Boot 4.** The springdoc 2.x line targets Boot 3.x, so runtime compatibility was unverified. **Resolved:** springdoc 3.1.0 is built against Boot 4.1.0 and starts cleanly — Swagger UI and `/v3/api-docs` both return 200. The version is pinned in a `pom.xml` property because Boot 4 does not manage it. The descope fallback (a README endpoint table) remains available but was not needed.
+6. **Placeholder scaffolding.** `DataService` and four demo endpoints on `AuthController` existed to prove out method security. **Resolved:** removed in Phase 0.
+
+One further hazard was found later, during implementation rather than design, and is recorded here because it is the same class of problem: `POST /auth/register` created whatever role the request body named, inventing it if absent — an unauthenticated path to `ROLE_ADMIN` that would have made every role gate decorative. Registration now grants `ROLE_CAREGIVER` only.
 
 ---
 
 ## 11. Success criteria
 
-The project is complete when all of the following hold:
+The project is complete when all of the following hold. Status as of 2026-08-26, with Phase 7 outstanding:
 
-- [ ] All "Must" functional requirements are implemented
-- [ ] All eight business rules are enforced server-side and covered by passing and rejecting tests
-- [ ] A coordinator can schedule a visit and a caregiver can complete it, entirely through the UI
-- [ ] `docker compose up` produces a working stack from a clean checkout
-- [ ] The application is reachable at a public HTTPS URL
-- [ ] CI runs backend and frontend tests on every push
-- [ ] The README contains screenshots and a demo recording
+- [x] All "Must" functional requirements are implemented — with one stated deviation: FR-4.5 shipped as the day view, the week view descoped
+- [x] All eight business rules are enforced server-side and covered by passing and rejecting tests
+- [x] A coordinator can schedule a visit and a caregiver can complete it, entirely through the UI
+- [x] `docker compose up` produces a working stack from a clean checkout — verified on a fresh volume for both `docker-compose.yml` and `docker-compose.prod.yml`
+- [ ] The application is reachable at a public HTTPS URL — Phase 7
+- [ ] CI runs backend and frontend tests on every push — Phase 7
+- [x] The README contains screenshots and a demo recording
 
 ---
 
@@ -309,6 +320,6 @@ The project is complete when all of the following hold:
 |---|---|---|
 | Scope expands beyond five days | High | Phase 6 is buffer; descope order is fixed in PLAN.md section 8 |
 | Spring Boot 4 ecosystem gaps | Medium | Verify each dependency in Phase 0; springdoc has a documented fallback |
-| Cross-site cookie breaks on deploy | High | Make cookie and CORS settings environment-driven in Phase 1, not deployment day |
+| Cross-site cookie breaks on deploy | High | Make cookie and CORS settings environment-driven in Phase 0, not deployment day |
 | Azure free-tier limits or tier changes | Medium | Verify tiers at signup; local Docker stack remains the primary demo path |
 | Schedule board UI is more work than estimated | Medium | Ship the day view first; the week view is a stretch |

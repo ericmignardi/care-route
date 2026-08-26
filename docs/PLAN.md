@@ -2,7 +2,8 @@
 
 **Companion to:** [PRD.md](./PRD.md)
 **Target:** 5 working days (~40 focused hours)
-**Last updated:** 2026-08-25
+**Status:** Phases 0–6 complete. Phase 7 (Azure deployment and CI/CD) is outstanding — there is no `.github/workflows/` and no cloud environment yet.
+**Last updated:** 2026-08-26
 
 ---
 
@@ -519,6 +520,8 @@ When time runs short, cut in this order. Decided in advance, deliberately.
 | 6 | Motion polish | Reduce to page transitions only |
 
 **Never cut:** business rule enforcement, the business rule tests, the seed data, the README, or the deployment. Those five are what the project is being judged on.
+
+**What was actually cut:** only #1, the week view. The chart shipped in CSS rather than Recharts, the frontend suite shipped at eleven tests, springdoc turned out to work under Boot 4, and the motion work stayed within the "restraint" budget. Admin user-management screens (#5) were never built, as planned — the seeded accounts cover the demo and no "Must" requirement asks for them.
 
 ---
 

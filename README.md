@@ -6,18 +6,22 @@
 
 Coordinators schedule caregiver visits against real operational constraints. Caregivers check in, complete care-plan tasks, and check out from the field.
 
-[![Backend CI](https://img.shields.io/badge/backend-Spring%20Boot%204.1-6DB33F?logo=springboot&logoColor=white)](#tech-stack)
+[![Backend](https://img.shields.io/badge/backend-Spring%20Boot%204.1-6DB33F?logo=springboot&logoColor=white)](#tech-stack)
 [![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Vite-61DAFB?logo=react&logoColor=black)](#tech-stack)
 [![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](#tech-stack)
-[![Deployed on Azure](https://img.shields.io/badge/deployed-Azure%20Canada%20Central-0078D4?logo=microsoftazure&logoColor=white)](#deployment)
+[![Deployment target](https://img.shields.io/badge/deploy%20target-Azure%20Canada%20Central-0078D4?logo=microsoftazure&logoColor=white)](#deployment)
 
-[Live demo](#) · [Product requirements](docs/PRD.md) · [Implementation plan](docs/PLAN.md)
+[Product requirements](docs/PRD.md) · [Implementation plan](docs/PLAN.md) · [Design brief](docs/DESIGN-BRIEF.md)
 
 </div>
 
 ---
 
-> **Replace before publishing:** the live demo link above.
+> **Not deployed yet.** Everything below runs locally today, including the full
+> `docker-compose.prod.yml` stack. The Azure environment and the GitHub Actions pipeline are
+> [Phase 7](docs/PLAN.md#phase-7--azure-deployment-and-cicd) and are not in the repository yet, so
+> [Deployment](#deployment) describes the target rather than a running system. Add the live URL
+> here when it exists.
 
 ## Screenshots
 
@@ -93,7 +97,7 @@ Two design decisions worth calling out:
 
 **Frontend** — React 19 · TypeScript · Vite · Tailwind CSS 4 · Zustand · React Router · React Hook Form + Zod · Motion · Lucide · Axios · Vitest + Testing Library + MSW
 
-**Infrastructure** — Docker · Docker Compose · GitHub Actions · Azure Container Apps · Azure Database for PostgreSQL · Azure Static Web Apps
+**Infrastructure** — Docker · Docker Compose · nginx · *planned:* GitHub Actions · Azure Container Apps · Azure Database for PostgreSQL · Azure Static Web Apps
 
 ## Architecture
 
@@ -114,7 +118,7 @@ flowchart LR
     F --> C --> S --> R --> DB
 ```
 
-Requests carry the JWT in an httpOnly cookie, with an `Authorization: Bearer` fallback for API testing. Authorization is layered: route matchers in the security config, `@PreAuthorize` role checks on controllers and services, and an ownership guard in the service layer for the "own visits only" rule that role annotations cannot express.
+Requests carry the JWT in an httpOnly cookie, with an `Authorization: Bearer` fallback for API testing. Authorization is layered: route matchers in the security config, `@PreAuthorize` role checks on the controllers, and an ownership guard (`VisitAccessGuard`) in the service layer for the "own visits only" rule that role annotations cannot express.
 
 ## Getting started
 
@@ -143,7 +147,7 @@ cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-The `dev` profile seeds roughly 8 clients, 5 caregivers, and 40 visits across the current week. Seeding is idempotent — restarting will not duplicate data.
+The `dev` profile seeds 8 clients, 5 caregivers and 41 visits across the current week, including unassigned ones so the assign flow has something to act on. Seeding is idempotent — restarting will not duplicate data.
 
 **3. Frontend** — starts on `http://localhost:5173`
 
@@ -188,6 +192,10 @@ All configuration is environment-driven; no secrets are committed. The backend r
 | `JWT_COOKIE_SECURE` | `Secure` flag on the auth cookie | `false` |
 | `JWT_COOKIE_SAME_SITE` | `Lax` locally, `None` in production | `Lax` |
 | `APP_CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins | `http://localhost:5173` |
+| `VISIT_CHECK_IN_TOLERANCE_MINUTES` | BR-4 check-in window either side of the scheduled start | `30` |
+| `APP_TIME_ZONE` | Zone the scheduled times are interpreted in | `America/Toronto` |
+| `BACKEND_PORT` / `FRONTEND_PORT` | Published ports, `docker-compose.prod.yml` only | `8080` / `5173` |
+| `VITE_API_URL` | API origin baked into the frontend bundle at build time | `http://localhost:8080/api/v1` |
 
 > In production the frontend and backend sit on different domains, making every API call cross-site. The auth cookie must be issued `SameSite=None; Secure` or the browser will silently drop it — producing a login that appears to succeed followed by 401s on everything after. Hence the two configurable cookie flags.
 
@@ -203,6 +211,7 @@ Base path `/api/v1`. Errors follow RFC 7807 (`application/problem+json`).
 | `GET` `POST` | `/clients` | coordinator |
 | `GET` `PUT` `DELETE` | `/clients/{id}` | coordinator |
 | `GET` `POST` | `/clients/{id}/care-plan-tasks` | coordinator |
+| `DELETE` | `/clients/{id}/care-plan-tasks/{taskId}` | coordinator |
 | `GET` `POST` | `/caregivers` | coordinator |
 | `GET` `PUT` | `/caregivers/{id}`, `/caregivers/{id}/availability` | coordinator |
 | `GET` `POST` | `/visits` | coordinator |
@@ -211,12 +220,15 @@ Base path `/api/v1`. Errors follow RFC 7807 (`application/problem+json`).
 | `POST` | `/visits/{id}/assign`, `/visits/{id}/cancel` | coordinator |
 | `POST` | `/visits/{id}/check-in`, `/check-out` | owning caregiver |
 | `POST` | `/visits/{id}/tasks/{taskId}/complete` | owning caregiver |
+| `POST` | `/visits/{id}/notes` | owning caregiver |
 | `GET` | `/visits/my` | caregiver |
 | `GET` | `/dashboard/summary` | coordinator |
 
+"Coordinator" above means `ROLE_COORDINATOR` or `ROLE_ADMIN`. `POST /auth/register` is public but self-service only: it grants `ROLE_CAREGIVER` and rejects a request naming any other role, so the caregiver *profile* still has to be created by a coordinator through `POST /caregivers`.
+
 Full detail in [docs/PRD.md](docs/PRD.md#8-api-surface). With the backend running, the generated OpenAPI document is served at `/v3/api-docs` and Swagger UI at `/swagger-ui.html`.
 
-Liveness is exposed at `/actuator/health`.
+`/actuator/health` is public and carries the liveness and readiness probe groups, which is what a container platform probes. `/actuator/info` is exposed but, like everything else, requires authentication.
 
 ## Testing
 
@@ -231,7 +243,9 @@ Frontend tests are deliberately few and all about behaviour that would be expens
 
 ## Deployment
 
-Deployed to **Azure, Canada Central (Toronto)** — the nearest region, and one that keeps a healthcare-adjacent project's data in Canada.
+**Planned, not yet built.** Phase 7 is the remaining work: no `.github/workflows/` and no Azure resources exist in this repository today. The full stack runs locally from `docker-compose.prod.yml`, which is the same two-origin topology the target describes.
+
+Target: **Azure, Canada Central (Toronto)** — the nearest region, and one that keeps a healthcare-adjacent project's data in Canada.
 
 | Component | Service |
 |---|---|
@@ -241,34 +255,42 @@ Deployed to **Azure, Canada Central (Toronto)** — the nearest region, and one 
 | Images | GitHub Container Registry |
 | CI/CD | GitHub Actions with OIDC federated credentials |
 
-Pushes to `main` run tests, build and publish the backend image, and deploy both surfaces. The workflow authenticates via OIDC federation, so no long-lived Azure credential is stored in the repository. Runbook and gotchas in [docs/PLAN.md](docs/PLAN.md#phase-7--azure-deployment-and-cicd).
+The intended pipeline runs tests on every push and, on `main`, builds and publishes the backend image and deploys both surfaces — authenticating by OIDC federation so no long-lived Azure credential is stored in the repository. Runbook, tier choices and known gotchas in [docs/PLAN.md](docs/PLAN.md#phase-7--azure-deployment-and-cicd).
 
 ## Project structure
 
 ```
 careroute/
 ├── backend/                  Spring Boot API
-│   ├── Dockerfile            multi-stage backend build
+│   ├── Dockerfile            multi-stage backend build (Maven → JRE)
 │   ├── pom.xml
-│   └── src/main/java/com/careroute/backend/
-│       ├── config/           security, CORS, JWT properties
-│       ├── controller/
-│       ├── dto/              record types
-│       ├── exception/        ProblemDetail handlers
-│       ├── model/            entities + Visit state machine
-│       ├── repository/       JPA repos + Specifications
-│       ├── security/         JWT filter, UserDetails
-│       └── service/          eligibility, scheduling, execution
+│   ├── src/main/java/com/careroute/backend/
+│   │   ├── config/           security, CORS, JWT + scheduling properties, Clock
+│   │   ├── controller/
+│   │   ├── dto/              record types
+│   │   ├── exception/        ProblemDetail handlers
+│   │   ├── model/            entities + Visit state machine
+│   │   ├── repository/       JPA repos
+│   │   ├── security/         JWT filter, UserDetails
+│   │   ├── seed/             dev-profile CommandLineRunner
+│   │   ├── service/          eligibility, scheduling, execution, access guard
+│   │   └── spec/             JPA Specifications for the list filters
+│   ├── src/main/resources/db/migration/   V1–V3 Flyway migrations
+│   └── src/test/java/…       Testcontainers integration + unit tests
 ├── frontend/                 React + Vite SPA
+│   ├── Dockerfile            multi-stage build, nginx runtime
+│   ├── nginx.conf            SPA fallback, cache headers, /healthz
+│   ├── .env.example          VITE_API_URL template
 │   ├── package.json
 │   └── src/
-│       └── api/ components/ features/ hooks/ stores/ context/ lib/ types/
+│       └── api/ components/ context/ features/ hooks/ lib/ stores/ test/ types/
 ├── docs/
 │   ├── PRD.md                requirements, domain model, business rules
 │   ├── PLAN.md               phased plan with exit criteria
-│   └── DESIGN-BRIEF.md       Claude Design prompt and art direction
+│   ├── DESIGN-BRIEF.md       Claude Design prompt and art direction
+│   └── screenshots/          captures and the demo GIF used above
 ├── docker-compose.yml        local Postgres
-├── docker-compose.prod.yml   full stack
+├── docker-compose.prod.yml   full stack, own project name (careroute-prod)
 ├── .env                      local config (gitignored)
 ├── .env.example              template
 ├── .gitignore
